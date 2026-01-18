@@ -1,0 +1,617 @@
+<krpano version="1.0.8.15" title="Intel MSB" onstart="startup();set(mycamera,a);set(myphase,1)">
+	<control mousetype="drag2d"	/>
+	<include url="skin/vtourskin.xml" />
+	<include url="ourbuttons.xml" />
+	<include url="ourvideos.xml" />
+
+	<!-- set skin settings: bingmaps? gyro? -->
+	<skin_settings bingmaps="false" bingmaps_key=""
+	               gyro="true"
+	               />
+
+	<!-- set optional skin logo url -->
+	<layer name="skin_logo" url="skin/logo.png" align="bottomright" y="10" scale="0.5" alpha="1.0" enabled="false" />
+	
+	<action name="startup">
+		if(startscene === null, copy(startscene,scene[0].name));
+		loadscene(get(startscene), null, MERGE);
+	</action>
+
+	
+	<scene name="scene_510_Pano_A_Phase_0_0000" title="View: A - Phase: 0" onstart="" thumburl="panos/510_Pano_A_Phase_0_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_0_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_0_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_0_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+
+	</scene>
+
+	<scene name="scene_510_Pano_A_Phase_1_0000" title="View: A - Phase: 1" onstart="" thumburl="panos/510_Pano_A_Phase_1_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_1_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_1_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_1_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_A_Phase_2_0000" title="View: A - Phase: 2" onstart="" thumburl="panos/510_Pano_A_Phase_2_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_2_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_2_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_2_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_A_Phase_3_0000" title="View: A - Phase: 3" onstart="" thumburl="panos/510_Pano_A_Phase_3_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_3_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_3_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_3_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_A_Phase_4_0000" title="View: A - Phase: 4" onstart="" thumburl="panos/510_Pano_A_Phase_4_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_4_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_4_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_4_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_A_Phase_5_0000" title="View: A - Phase: 5" onstart="" thumburl="panos/510_Pano_A_Phase_5_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_5_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_5_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_5_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_A_Phase_M_0000" title="View: A - Phase: Mechanical" onstart="" thumburl="panos/510_Pano_A_Phase_M_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_A_Phase_M_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_A_Phase_M_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_A_Phase_M_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>	
+	
+	<scene name="scene_510_Pano_B_Phase_0_0000" title="View: B - Phase: 0" onstart="" thumburl="panos/510_Pano_B_Phase_0_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_0_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_0_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_0_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_B_Phase_1_0000" title="View: B - Phase: 1" onstart="" thumburl="panos/510_Pano_B_Phase_1_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_1_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_1_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_1_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_B_Phase_2_0000" title="View: B - Phase: 2" onstart="" thumburl="panos/510_Pano_B_Phase_2_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_2_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_2_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_2_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_B_Phase_3_0000" title="View: B - Phase: 3" onstart="" thumburl="panos/510_Pano_B_Phase_3_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_3_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_3_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_3_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_B_Phase_4_0000" title="View: B - Phase: 4" onstart="" thumburl="panos/510_Pano_B_Phase_4_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_4_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_4_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_4_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_B_Phase_5_0000" title="View: B - Phase: 5" onstart="" thumburl="panos/510_Pano_B_Phase_5_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_5_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_5_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_5_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_B_Phase_M_0000" title="View: B - Phase: Mechanical" onstart="" thumburl="panos/510_Pano_B_Phase_M_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_B_Phase_M_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_B_Phase_M_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_B_Phase_M_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_C_Phase_0_0000" title="View: C - Phase: 0" onstart="" thumburl="panos/510_Pano_C_Phase_0_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_0_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_0_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_0_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_C_Phase_1_0000" title="View: C - Phase: 1" onstart="" thumburl="panos/510_Pano_C_Phase_1_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_1_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_1_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_1_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_C_Phase_2_0000" title="View: C - Phase: 2" onstart="" thumburl="panos/510_Pano_C_Phase_2_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_2_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_2_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_2_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_C_Phase_3_0000" title="View: C - Phase: 3" onstart="" thumburl="panos/510_Pano_C_Phase_3_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_3_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_3_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_3_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_C_Phase_4_0000" title="View: C - Phase: 4" onstart="" thumburl="panos/510_Pano_C_Phase_4_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_4_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_4_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_4_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_C_Phase_M_0000" title="View: C - Phase: Mechanical" onstart="" thumburl="panos/510_Pano_C_Phase_M_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_M_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_M_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_M_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_C_Phase_5_0000" title="View: C - Phase: 5" onstart="" thumburl="panos/510_Pano_C_Phase_5_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_C_Phase_5_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_C_Phase_5_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_C_Phase_5_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_D_Phase_0_0000" title="View: D - Phase: 0" onstart="" thumburl="panos/510_Pano_D_Phase_0_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_0_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_0_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_0_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_D_Phase_1_0000" title="View: D - Phase: 1" onstart="" thumburl="panos/510_Pano_D_Phase_1_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_1_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_1_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_1_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_D_Phase_2_0000" title="View: D - Phase: 2" onstart="" thumburl="panos/510_Pano_D_Phase_2_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_2_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_2_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_2_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_D_Phase_3_0000" title="View: D - Phase: 3" onstart="" thumburl="panos/510_Pano_D_Phase_3_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_3_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_3_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_3_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_D_Phase_4_0000" title="View: D - Phase: 4" onstart="" thumburl="panos/510_Pano_D_Phase_4_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_4_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_4_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_4_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_D_Phase_5_0000" title="View: D - Phase: 5" onstart="" thumburl="panos/510_Pano_D_Phase_5_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_5_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_5_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_5_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_D_Phase_M_0000" title="View: D - Phase: Mechanical" onstart="" thumburl="panos/510_Pano_D_Phase_M_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_D_Phase_M_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_D_Phase_M_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_D_Phase_M_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_E_Phase_0_0000" title="View: E - Phase: 0" onstart="" thumburl="panos/510_Pano_E_Phase_0_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_0_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_0_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_0_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_E_Phase_1_0000" title="View: E - Phase: 1" onstart="" thumburl="panos/510_Pano_E_Phase_1_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_1_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_1_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_1_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_E_Phase_2_0000" title="View: E - Phase: 2" onstart="" thumburl="panos/510_Pano_E_Phase_2_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_2_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_2_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_2_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_E_Phase_3_0000" title="View: E - Phase: 3" onstart="" thumburl="panos/510_Pano_E_Phase_3_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_3_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_3_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_3_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_E_Phase_4_0000" title="View: E - Phase: 4" onstart="" thumburl="panos/510_Pano_E_Phase_4_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_4_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_4_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_4_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+	
+	<scene name="scene_510_Pano_E_Phase_5_0000" title="View: E - Phase: 5" onstart="" thumburl="panos/510_Pano_E_Phase_5_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_5_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_5_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_5_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+	<scene name="scene_510_Pano_E_Phase_M_0000" title="View: E - Phase: Mechanical" onstart="" thumburl="panos/510_Pano_E_Phase_M_0000.tiles/thumb.jpg" lat="" lng="" heading="">
+
+		<view fovtype="MFOV" maxpixelzoom="6.0" fovmin="10" fovmax="120" limitview="auto" />
+
+		<preview url="panos/510_Pano_E_Phase_M_0000.tiles/preview.jpg" />
+
+		<image>
+			<cube url="panos/510_Pano_E_Phase_M_0000.tiles/pano_%s.jpg" />
+			<mobile>
+				<cube url="panos/510_Pano_E_Phase_M_0000.tiles/mobile_%s.jpg" />
+			</mobile>
+		</image>
+
+		<!-- place your scene hotspots here -->
+
+	</scene>
+
+</krpano>

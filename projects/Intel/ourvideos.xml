@@ -1,0 +1,114 @@
+<krpano>
+<layer name="mytestbox" state="hidden" keep="true" type="container" bgcolor="0x000000" bgalpha="0.0" align="topleft" width="100%" height="0" x="0" y="230" zorder="0">
+	<layer name="videos_window" state="hidden" keep="true" type="container" bgcolor="0x000000" bgalpha="0.5" align="center" width="800" height="448" x="0" y="1000" y_shown="0" y_hidden="1000" zorder="0">
+		<layer name="videobox_topborder" url="./skin/vtourskin.png" crop="2|0|60|12" align="topleft" edge="bottomleft" width="100%" height="12" x="0" y="0" enabled="false" />
+		<layer name="videobox_bottomborder"  url="./skin/vtourskin.png" crop="2|52|60|12"   align="bottomleft" edge="topleft" width="100%" height="12" x="0" y="0" enabled="false" />
+		<layer name="videobox_leftborder"  url="./skin/vtourskin_bordersides.png" crop="0|0|12|64"  align="topleft" edge="topright" width="12" height="100%" x="0" y="0" enabled="false" />
+		<layer name="videobox_rightborder"  url="./skin/vtourskin_bordersides.png" crop="52|0|12|64"  align="topright" edge="topleft" width="12" height="100%" x="0" y="0" enabled="false" />
+		<layer name="videobox_cornerA"  url="./skin/vtourskin_corners.png" crop="0|0|12|12"  align="topleft" edge="bottomright" width="12" height="12" x="0" y="0" enabled="false" />
+		<layer name="videobox_cornerB"  url="./skin/vtourskin_corners.png" crop="12|0|12|12"  align="topright" edge="bottomleft" width="12" height="12" x="0" y="0" enabled="false" />
+		<layer name="videobox_cornerC"  url="./skin/vtourskin_corners.png" crop="0|12|12|12"  align="bottomleft" edge="topright" width="12" height="12" x="0" y="0" enabled="false" />
+		<layer name="videobox_cornerD"  url="./skin/vtourskin_corners.png" crop="12|12|12|12"  align="bottomright" edge="topleft" width="12" height="12" x="0" y="0" enabled="false" />
+		<layer name="videobox" 
+		url="%SWFPATH%/plugins/videoplayer.swf" 
+		alturl="%SWFPATH%/plugins/videoplayer.js" 
+		videourl="" 
+		align="center" x="0" y="0"
+		pausedonstart="true"
+		loop="true"
+        volume="1.0"
+		scale="1.0"
+        buffertime="0.1"
+        ignoremetadata="false"
+        updateeveryframe="true"
+        onvideoready=""
+        onvideopaused=""
+        onvideocomplete=""
+        onunsupported=""
+		onclick="togglepause();"
+		/>
+	</layer>
+	</layer>
+
+
+	<layer name="Ourvideos_bar" state="hidden" keep="true" type="container" bgcolor="0x000000" bgalpha="0.5" align="top" width="100%" height="150" x="0" y="-212" y_shown="80" y_hidden="-212" zorder="0">
+		<layer name="Ourvideos_border"  url="./skin/vtourskin.png" crop="2|52|60|12"   align="bottomleft" edge="topleft" width="100%" height="12" x="0" y="0" enabled="false" />
+		<layer name="Ourvideos_topborder" url="./skin/vtourskin.png" crop="2|0|60|12" align="topleft" edge="bottomleft" width="100%" height="12" x="0" y="0" enabled="false" />
+		
+		
+		<layer name="videoA" 
+		url="%SWFPATH%/videos/510_Anim_DuctVertical.jpg" 
+		videourl="%SWFPATH%/videos/510_Anim_DuctVertical.mp4"
+		edge="center"
+		align="center" x="-420" y="0"
+        onclick="video_playback(get(videourl));"
+		/>
+		
+		<layer name="videoB" 
+		url="%SWFPATH%/videos/510_Anim_ExtVertical.jpg" 
+		videourl="%SWFPATH%/videos/510_Anim_ExtVertical.mp4" 
+		edge="center"
+		align="center" x="-140" y="0"
+        onclick="video_playback(get(videourl));"
+		/>
+		
+		<layer name="videoC" 
+		url="%SWFPATH%/videos/510_Anim_LandingPlatform.jpg" 
+		videourl="%SWFPATH%/videos/510_Anim_LandingPlatform.mp4" 
+		edge="center"
+		align="center" x="140" y="0"
+        onclick="video_playback(get(videourl));"
+		/>
+		
+		<layer name="videoD" 
+		url="%SWFPATH%/videos/510_Anim_RoofMech.jpg" 
+		videourl="%SWFPATH%/videos/510_Anim_RoofMech.mp4"
+		edge="center"
+		align="center" x="420" y="0"
+        onclick="video_playback(get(videourl));"
+		/>
+		
+	</layer>
+	
+	<action name="videos_hidevideos">
+		if(
+			layer[ourvideos_bar].state != 'hidden'
+		,
+			layer[videobox].stop();
+			tween(layer[videos_window].y, get(layer[videos_window].y_hidden), 1.0, easeOutQuint);
+			tween(layer[ourvideos_bar].y, get(layer[ourvideos_bar].y_hidden), 1.0, easeOutQuint);
+			set(layer[ourvideos_bar].state, 'hidden');
+			set(layer[videos_window].state, 'hidden');
+			wait(0.4);
+			,
+		);			
+	</action>
+	
+	<action name="videos_showvideos">
+		if(
+			layer[ourvideos_bar].state == 'hidden'
+			,
+			tween(layer[videos_window].y, get(layer[videos_window].y_shown), 1.0, easeOutQuint);
+			tween(layer[ourvideos_bar].y, get(layer[ourvideos_bar].y_shown), 1.0, easeOutQuint);
+			set(layer[ourvideos_bar].state, 'visible');
+			set(layer[videos_window].state, 'visible');
+			wait(0.4)
+			,
+			layer[videobox].stop();
+			tween(layer[videos_window].y, get(layer[videos_window].y_hidden), 1.0, easeOutQuint);
+			tween(layer[ourvideos_bar].y, get(layer[ourvideos_bar].y_hidden), 1.0, easeOutQuint);
+			set(layer[ourvideos_bar].state, 'hidden');
+			set(layer[videos_window].state, 'hidden');
+			wait(0.4);
+		);
+						
+	</action>
+	
+	<action name="video_playback">
+		if(%1 != null,
+			layer[videobox].playvideo(%1);
+			layer[videobox].play();
+			
+			);
+	</action>
+</krpano>		

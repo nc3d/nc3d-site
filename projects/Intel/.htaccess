@@ -1,0 +1,2 @@
+# Default to loading tour.html
+DirectoryIndex tour.html index.html index.php

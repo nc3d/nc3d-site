@@ -1,0 +1,64 @@
+<krpano>
+
+	<!-- the image map -->
+	<layer name="map" url="imagemap.png" keep="true" align="lefttop" x="16" y="16" width="128" height="58"
+	        handcursor="false"
+	        scalechildren="true"
+	        maskchildren="true"
+	        onclick="openmap();"
+	>
+		<!-- 'rooms' and spots - the 'room' container elements were used for masking the radar -->
+		<layer name="room1" type="container" align="lefttop" x="397" y="65" width="52" height="159" maskchildren="true">
+			<layer name="bedrooma_entry" url="mappoint.png" align="lefttop" edge="center" x="24" y="24"  zorder="2" onclick="loadscene(scene_486_Unit_FF1-B_Panorama_BedroomA_entry, null, MERGE, BLEND(1));" />
+		</layer>
+		<layer name="room2" type="container" align="lefttop" x="221" y="4" width="171" height="223" maskchildren="true">
+			<layer name="livingroom" url="mappoint.png" align="lefttop" edge="center" x="103" y="170"  zorder="2" onclick="loadscene(scene_486_Unit_FF1-B_Panorama_Livingroom, null, MERGE, BLEND(1));" />
+			<layer name="kitchen" url="mappoint.png" align="lefttop" edge="center" x="84" y="73" zorder="2" onclick="loadscene(scene_486_Unit_FF1-B_Panorama_Kitchen, null, MERGE, BLEND(1));" />
+		</layer>
+		<layer name="room3" type="container" align="lefttop" x="106" y="108" width="96" height="115" maskchildren="true">
+			<layer name="bedroomb" url="mappoint.png" align="lefttop" edge="center" x="50" y="57" zorder="2" onclick="loadscene(scene_486_Unit_FF1-B_Panorama_BedroomB, null, MERGE, BLEND(1));" />
+		</layer>		
+		<layer name="room4" type="container" align="lefttop" x="451" y="6" width="51" height="99" maskchildren="true">
+			<layer name="bathrooma" url="mappoint.png" align="lefttop" edge="center" x="27" y="61" zorder="2" onclick="loadscene(scene_486_Unit_FF1-B_Panorama_BathroomA, null, MERGE, BLEND(1));" />
+		</layer>	
+		<layer name="room5" type="container" align="lefttop" x="106" y="65" width="116" height="38" maskchildren="true">
+			<layer name="hallway" url="mappoint.png" align="lefttop" edge="center" x="100" y="21" zorder="2" onclick="loadscene(scene_486_Unit_FF1-B_Panorama_hallway, null, MERGE, BLEND(1));" />
+		</layer>		
+	</layer>
+
+
+	<!-- radar plugin, will be assigned to be a child of spot -->
+	<layer name="radar" keep="true" visible="false"
+	       url="%SWFPATH%/plugins/radar.swf"
+	       alturl="%SWFPATH%/plugins/radar.js"
+	       align="center" edge="center"
+	       fillcolor="0xFFFFFF" fillalpha="0.5" scale="3.0"
+	       headingoffset="0"
+		   enabled="false"
+	       />
+
+	<!-- activated spot image (child of the radar layer) -->
+	<layer name="activespot" parent="radar" url="mappointactive.png" keep="true" align="center" edge="center" />
+
+
+	<!-- actions -->
+	<action name="closemap">
+        set(onclick, openmap() );
+        tween(width,128);
+        tween(height,58);
+    </action>
+
+    <action name="openmap">
+        set(onclick, closemap() );
+        tween(width,512);
+        tween(height,231);
+    </action>
+
+
+	<!-- activatespot action - %1 = the current spot, %2 = the current radar heading -->
+	<action name="activatespot">
+		set(layer[radar].parent, layer[%1]);
+		set(layer[radar].visible, true);
+		set(layer[radar].heading, %2);
+	</action>
+</krpano>

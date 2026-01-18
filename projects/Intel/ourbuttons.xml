@@ -1,0 +1,49 @@
+<krpano>
+	<layer name="OurButton_bar" keep="true" type="container" bgcolor="0x000000" bgalpha="0.5" align="lefttop" width="100%" height="40" x="0" y="20" y_shown="20" y_hidden="-42" zorder="1">
+		<layer name="Ourbuttons_border"  url="./skin/vtourskin.png" crop="2|52|60|12"   align="bottomleft" edge="topleft" width="100%" height="12" x="0" y="0" enabled="false" />
+		<layer name="Ourbuttons_topborder" url="./skin/vtourskin.png" crop="2|0|60|12" align="topleft" edge="bottomleft" width="100%" height="12" x="0" y="0" enabled="false" />
+
+		
+		<layer name="View" url="./skin/View.png" keep="true" align="left" x="16" y="0" scale="0.5" enabled="false" />
+		<layer name="A" url="./skin/A.png" zorder="2" maskchildren="true" keep="true" align="left" x="120" y="0" scale="0.5" onclick="videos_hidevideos();view_buttonglow(get(name));set(mycamera,a);setviews();set(view.fov,90);set(view.hlookat,0);set(view.vlookat,0);"	/>
+		<layer name="B" url="./skin/B.png" zorder="2" maskchildren="true" keep="true" align="left" x="152" y="0" scale="0.5" onclick="videos_hidevideos();view_buttonglow(get(name));set(mycamera,b);setviews();set(view.fov,90);set(view.hlookat,0.330);set(view.vlookat,32.256);"	/>
+		<layer name="C" url="./skin/C.png" zorder="2" maskchildren="true" keep="true" align="left" x="184" y="0" scale="0.5" onclick="videos_hidevideos();view_buttonglow(get(name));set(mycamera,c);setviews();set(view.fov,90);set(view.hlookat,-8.211);set(view.vlookat,26.367);"	/>
+		<layer name="D" url="./skin/D.png" zorder="2" maskchildren="true" keep="true" align="left" x="216" y="0" scale="0.5" onclick="videos_hidevideos();view_buttonglow(get(name));set(mycamera,d);setviews();set(view.fov,90);set(view.hlookat,0.261);set(view.vlookat,26.747);"	/>
+		<layer name="E" url="./skin/E.png" zorder="2" maskchildren="true" keep="true" align="left" x="248" y="0" scale="0.5" onclick="videos_hidevideos();view_buttonglow(get(name));set(mycamera,e);setviews();set(view.fov,90);set(view.hlookat,0);set(view.vlookat,0);"	/>
+		<layer name="Videos" url="./skin/film.png" keep="true" align="left" x="30%" y="0" scale="0.5" ondown="skin_buttonglow(get(name));" onup="skin_buttonglow(null);" onclick="videos_showvideos()"	/>
+		
+		<layer name="RoughDraft" url="./skin/IntelMSB.png" keep="true" align="center" x="0" y="0" scale="0.5" enabled="false"	/>
+		<layer name="skin_btn_gyro"   url="./skin/vtourskin.png" crop="0|384|64|64"  align="right"      x="32%"  y="0"   scale="0.5" ondown="skin_buttonglow(get(name)); skin_showmap(false);" onclick="switch(plugin[skin_gyro].enabled);" onup="skin_buttonglow(null);" visible="false" devices="HTML5" />
+		<layer name="skin_btn_fs"     url="./skin/vtourskin.png" crop="0|576|64|64"  align="right"      x="33%"  y="0"   scale="0.5" ondown="skin_buttonglow(get(name));" onup="skin_buttonglow(null);" onclick="switch(fullscreen);" devices="fullscreensupport" />
+		<layer name="Phase" url="./skin/Phase.png" keep="true" align="right" x="240" y="0" scale="0.5" enabled="false"	/>
+		<layer name="phase0" url="./skin/0.png" zorder="50" keep="true" align="right" x="208" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,0);setviews();"	/>
+		<layer name="phase1" url="./skin/1.png" zorder="50" keep="true" align="right" x="176" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,1);setviews();"	/>
+		<layer name="phase2" url="./skin/2.png" zorder="50" keep="true" align="right" x="144" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,2);setviews();"	/>
+		<layer name="phase3" url="./skin/3.png" zorder="50" keep="true" align="right" x="112" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,3);setviews();"	/>
+		<layer name="phase4" url="./skin/4.png" zorder="50" keep="true" align="right" x="80" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,4);setviews();"	/>
+		<layer name="phase5" url="./skin/5.png" zorder="50" keep="true" align="right" x="48" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,5);setviews();"	/>
+		<layer name="phaseM" url="./skin/M.png" zorder="50" keep="true" align="right" x="16" y="0" scale="0.5" onclick="videos_hidevideos();phase_buttonglow(get(name));set(myphase,M);setviews();"	/>
+	</layer>
+	
+	<events onkeydown="keydown()" />
+	
+	<action name="keydown">
+	trace('keycode=',keycode);
+	if (keycode == 83, set(layer[OurButton_bar].alpha, '1.0'); set(layer[skin_logo].alpha, '1.0'););
+	if (keycode == 72, set(layer[OurButton_bar].alpha, '0.0'); set(layer[skin_logo].alpha, '0.0'););
+	if (keycode == 48, set(myphase,0);setviews(););
+	if (keycode == 49, set(myphase,1);setviews(););
+	if (keycode == 50, set(myphase,2);setviews(););
+	if (keycode == 51, set(myphase,3);setviews(););
+	if (keycode == 52, set(myphase,4);setviews(););
+	if (keycode == 53, set(myphase,5);setviews(););
+	if (keycode == 54, set(myphase,M);setviews(););
+	</action>
+
+	<action name="setviews">
+		changeviews(get(mycamera),get(myphase))
+		</action>
+	<action name="changeviews">
+		loadscene(scene_510_Pano_%1_Phase_%2_0000, null, MERGE, BLEND(1));
+		</action>
+</krpano>	

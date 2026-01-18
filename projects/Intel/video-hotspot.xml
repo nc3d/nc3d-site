@@ -1,0 +1,27 @@
+<krpano version="1.0.8.15">
+
+	<!-- use only a grid preview pano to save download space -->
+	<preview type="grid(cube,16,16,512,0xCCCCCC,0xFFFFFF,0x999999);" details="16" />
+
+
+	<!-- note - the url of the video must be always relative to the main krpano swf file -->
+<plugin name="video1"
+			 url="%SWFPATH%/plugins/videoplayer.swf" 
+			 alturl="%SWFPATH%/plugins/videoplayer.js" 
+			 videourl="%SWFPATH%/videos/cats-short.m4v|%SWFPATH%/videos/cats-short.ogv|%SWFPATH%/videos/cats-short.webm"
+			 posterurl="%SWFPATH%/videos/poster.jpg"
+        align="center" x="0" y="0"
+        pausedonstart="false"
+        loop="false"
+        volume="1.0"
+        buffertime="0.1"
+        ignoremetadata="false"
+        updateeveryframe="true"
+        onvideoready=""
+        onvideopaused=""
+        onvideocomplete=""
+        onunsupported=""
+        />
+
+</krpano>
+
