@@ -1,25 +1,16 @@
 import os
 import json
+import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ExifTags, IptcImagePlugin
 
 # --- PATH CONFIGURATION ---
-# 1. Find the directory where this script is running
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) 
 
-# 2. Determine Project Root (Go up one level if we are inside a 'python' folder)
-if os.path.basename(SCRIPT_DIR).lower() == 'python':
-    PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
-else:
-    PROJECT_ROOT = SCRIPT_DIR
-
-# 3. Set Paths
-# Data stays in src/data
 DATA_FILE = os.path.join(PROJECT_ROOT, 'src', 'data', 'imageData.json')
-
-# Images are now in the specific folder you requested
-IMAGE_DIR = os.path.join(PROJECT_ROOT, 'images', 'Discipline', 'original')
+IMAGE_DIR = os.path.join(PROJECT_ROOT, '_raw_images', 'portfolio')
 
 print(f"DEBUG: Project Root:   {PROJECT_ROOT}")
 print(f"DEBUG: Image Folder:   {IMAGE_DIR}")
@@ -29,8 +20,8 @@ print(f"DEBUG: Data File:      {DATA_FILE}")
 class TaggerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("NC3D Image Tagger")
-        self.root.geometry("1100x800")
+        self.root.title("NC3D Image Tagger (Safe Mode)")
+        self.root.geometry("1200x900")
         self.root.configure(bg="#2d2d2d")
 
         self.data = []
@@ -38,28 +29,62 @@ class TaggerApp:
         self.unsaved_changes = False
         self.photo = None 
 
-        self.load_data()
+        # CRITICAL: If load fails, we must NOT continue.
+        if not self.load_data():
+            print("CRITICAL: Data load failed. Exiting to prevent overwrite.")
+            # We destroy the root after a short delay to ensure the message box is seen
+            self.root.after(100, self.root.destroy)
+            return
+
         self.scan_for_new_images()
         
-        # If still empty after scan, warn user
         if not self.data:
-            messagebox.showwarning("No Data", f"No images found!\n\nChecked folder:\n{IMAGE_DIR}")
+            messagebox.showwarning("No Data", f"No images found!\nChecked: {IMAGE_DIR}")
             
         self.setup_ui()
         self.show_current_slide()
 
     def load_data(self):
+        """
+        Returns True if load was successful (or file didn't exist).
+        Returns False if a file existed but failed to load (Critical Error).
+        """
         if os.path.exists(DATA_FILE):
+            # 1. Check for empty file (0 bytes)
+            if os.path.getsize(DATA_FILE) == 0:
+                messagebox.showerror(
+                    "Critical Data Error", 
+                    f"The file exists but is EMPTY (0 bytes):\n{DATA_FILE}\n\n"
+                    "The app will close to prevent overwriting it.\n"
+                    "Please check the file content in VS Code."
+                )
+                return False
+
+            # 2. Try to parse JSON
             try:
                 with open(DATA_FILE, 'r', encoding='utf-8') as f:
                     self.data = json.load(f)
-                print(f"Loaded {len(self.data)} records from JSON.")
+                print(f"✅ Successfully loaded {len(self.data)} records.")
+                return True
+            
+            except json.JSONDecodeError as e:
+                messagebox.showerror(
+                    "JSON Syntax Error", 
+                    f"The data file is corrupted or has invalid JSON.\n\nFile: {DATA_FILE}\nError: {e}\n\n"
+                    "App will close to protect your data."
+                )
+                return False
             except Exception as e:
-                print(f"Error loading JSON: {e}")
-                self.data = []
+                messagebox.showerror(
+                    "File Load Error", 
+                    f"Could not open data file.\n\nError: {e}\n\n"
+                    "Check if it is locked or open in another program."
+                )
+                return False
         else:
-            print("No existing JSON file found. Starting fresh.")
+            print("No existing JSON file found. Starting fresh is safe.")
             self.data = []
+            return True
 
     def scan_for_new_images(self):
         if not os.path.exists(IMAGE_DIR):
@@ -69,19 +94,16 @@ class TaggerApp:
         existing_urls = {item['url'] for item in self.data}
         found_count = 0
 
-        # Walk through the directory to find images
         for root_dir, _, files in os.walk(IMAGE_DIR):
             for filename in files:
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                    # If image is NOT in our JSON yet, add it
                     if filename not in existing_urls:
-                        new_entry = {
+                        self.data.append({
                             "url": filename,
                             "caption": "",
                             "tags": [],
                             "display": "hide" 
-                        }
-                        self.data.append(new_entry)
+                        })
                         found_count += 1
         
         if found_count > 0:
@@ -93,59 +115,95 @@ class TaggerApp:
         try:
             with open(DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(self.data, f, indent=4)
-            
             self.unsaved_changes = False
-            self.status_label.config(text="Saved successfully!", fg="#00ff00")
+            self.status_label.config(text="Saved!", fg="#00ff00")
             self.root.after(2000, lambda: self.status_label.config(text=""))
         except Exception as e:
             messagebox.showerror("Save Error", str(e))
 
     def update_current_record_from_ui(self):
         if not self.data: return
-        
         record = self.data[self.current_index]
         record['caption'] = self.caption_var.get()
-        
         tags_str = self.tags_var.get()
         record['tags'] = [t.strip() for t in tags_str.split(',') if t.strip()]
-        
         record['display'] = self.display_var.get()
 
     def show_current_slide(self):
         if not self.data: return
-
         record = self.data[self.current_index]
         
-        # 1. Load Image
-        image_path = os.path.join(IMAGE_DIR, record['url'])
-        self.display_image(image_path)
+        # Load Image
+        path = os.path.join(IMAGE_DIR, record['url'])
+        self.display_image(path)
 
-        # 2. Update Fields
+        # Update Text Fields
         self.filename_label.config(text=f"{record['url']} ({self.current_index + 1}/{len(self.data)})")
         self.caption_var.set(record.get('caption', ''))
-        
-        tags = record.get('tags', [])
-        if tags is None: tags = []
-        self.tags_var.set(", ".join(tags))
-        
+        self.tags_var.set(", ".join(record.get('tags', [])))
         self.display_var.set(record.get('display', 'hide'))
 
+    def get_exif_data(self, img):
+        """Extract resolution, Windows Tags, and IPTC Keywords."""
+        info = {
+            "res": f"{img.width} x {img.height}",
+            "meta": []
+        }
+        found_tags = set()
+
+        # 1. Check Standard EXIF & Windows XP Tags
+        WIN_XP_KEYWORDS = 40094
+        exif = img._getexif()
+        if exif:
+            if WIN_XP_KEYWORDS in exif:
+                try:
+                    val_str = exif[WIN_XP_KEYWORDS].decode('utf-16le').replace('\x00', '').strip()
+                    if val_str:
+                        found_tags.add(f"Windows Tags: {val_str}")
+                except:
+                    pass
+
+            for tag_id, value in exif.items():
+                decoded = ExifTags.TAGS.get(tag_id, tag_id)
+                if decoded == 'ImageDescription' and value:
+                    info['meta'].append(f"Caption: {value}")
+                if decoded == 'Model' and value:
+                    info['meta'].append(f"Camera: {value}")
+
+        # 2. Check IPTC Data
+        try:
+            iptc = IptcImagePlugin.getiptcinfo(img)
+            if iptc and (2, 25) in iptc:
+                raw_keywords = iptc[(2, 25)]
+                if isinstance(raw_keywords, list):
+                    keywords = [str(k.decode('utf-8') if isinstance(k, bytes) else k) for k in raw_keywords]
+                    found_tags.add(f"IPTC: {', '.join(keywords)}")
+                else:
+                    found_tags.add(f"IPTC: {raw_keywords}")
+        except:
+            pass
+
+        info['meta'].extend(list(found_tags))
+        if not info['meta']:
+            info['meta'].append("No specific tags found")
+            
+        return info
+
     def display_image(self, path):
-        # Debugging print
-        print(f"Loading: {path}")
-        
         try:
             img = Image.open(path)
-            
-            # Resize
-            max_w, max_h = 800, 500
-            img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
-            
+            meta = self.get_exif_data(img)
+            self.res_label.config(text=f"Resolution: {meta['res']}")
+            self.exif_label.config(text="\n".join(meta['meta']))
+
+            img.thumbnail((800, 500), Image.Resampling.LANCZOS)
             self.photo = ImageTk.PhotoImage(img)
             self.image_label.config(image=self.photo, text="")
         except Exception as e:
-            print(f"   [ERROR]: {e}")
-            self.image_label.config(image='', text=f"Image load failed:\n{path}", fg="red")
+            print(f"Load Error: {e}")
+            self.image_label.config(image='', text=f"File not found:\n{path}", fg="red")
+            self.res_label.config(text="Resolution: N/A")
+            self.exif_label.config(text="")
 
     def nav_next(self):
         self.update_current_record_from_ui()
@@ -164,48 +222,48 @@ class TaggerApp:
         style.theme_use('clam')
         style.configure("TLabel", background="#2d2d2d", foreground="#ffffff")
         style.configure("TButton", background="#4a4a4a", foreground="#ffffff")
+        
+        main = tk.Frame(self.root, bg="#2d2d2d")
+        main.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        main_frame = tk.Frame(self.root, bg="#2d2d2d")
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-
-        # Image
-        self.image_label = tk.Label(main_frame, bg="#000000", text="No Image")
+        self.image_label = tk.Label(main, bg="black", text="No Image")
         self.image_label.pack(pady=10, fill=tk.BOTH, expand=True)
         
-        self.filename_label = tk.Label(main_frame, text="", bg="#2d2d2d", fg="#aaaaaa")
-        self.filename_label.pack(pady=5)
+        info_frame = tk.Frame(main, bg="#2d2d2d")
+        info_frame.pack(fill=tk.X, pady=5)
+        self.filename_label = tk.Label(info_frame, text="", bg="#2d2d2d", fg="#aaaaaa", font=("Arial", 11, "bold"))
+        self.filename_label.pack()
+        self.res_label = tk.Label(info_frame, text="Resolution: --", bg="#2d2d2d", fg="#00ccff", font=("Arial", 9))
+        self.res_label.pack()
+        self.exif_label = tk.Label(main, text="", bg="#2d2d2d", fg="#888888", font=("Consolas", 8), justify=tk.CENTER)
+        self.exif_label.pack(pady=5)
 
-        # Controls
-        controls = tk.Frame(main_frame, bg="#2d2d2d")
-        controls.pack(fill=tk.X, pady=10)
-        controls.columnconfigure(1, weight=1)
+        ctrl = tk.Frame(main, bg="#2d2d2d")
+        ctrl.pack(fill=tk.X, pady=10)
+        ctrl.columnconfigure(1, weight=1)
 
-        tk.Label(controls, text="Caption:", bg="#2d2d2d", fg="white").grid(row=0, column=0, sticky="e", padx=5)
+        tk.Label(ctrl, text="Caption:", bg="#2d2d2d", fg="white").grid(row=0, column=0, sticky="e")
         self.caption_var = tk.StringVar()
-        tk.Entry(controls, textvariable=self.caption_var, bg="#404040", fg="white", insertbackground="white").grid(row=0, column=1, sticky="ew", padx=5)
+        tk.Entry(ctrl, textvariable=self.caption_var, bg="#404040", fg="white").grid(row=0, column=1, sticky="ew", padx=5)
 
-        tk.Label(controls, text="Tags:", bg="#2d2d2d", fg="white").grid(row=1, column=0, sticky="e", padx=5)
+        tk.Label(ctrl, text="Tags:", bg="#2d2d2d", fg="white").grid(row=1, column=0, sticky="e")
         self.tags_var = tk.StringVar()
-        tk.Entry(controls, textvariable=self.tags_var, bg="#404040", fg="white", insertbackground="white").grid(row=1, column=1, sticky="ew", padx=5)
+        tk.Entry(ctrl, textvariable=self.tags_var, bg="#404040", fg="white").grid(row=1, column=1, sticky="ew", padx=5)
 
-        tk.Label(controls, text="Display:", bg="#2d2d2d", fg="white").grid(row=2, column=0, sticky="e", padx=5)
-        display_frame = tk.Frame(controls, bg="#2d2d2d")
-        display_frame.grid(row=2, column=1, sticky="w", padx=5)
-        
+        tk.Label(ctrl, text="Display:", bg="#2d2d2d", fg="white").grid(row=2, column=0, sticky="e")
+        disp_frame = tk.Frame(ctrl, bg="#2d2d2d")
+        disp_frame.grid(row=2, column=1, sticky="w", padx=5)
         self.display_var = tk.StringVar(value="hide")
-        for text, val in [("Hide", "hide"), ("Homepage", "homepage"), ("Portfolio", "portfolio")]:
-            tk.Radiobutton(display_frame, text=text, variable=self.display_var, value=val, 
-                           bg="#2d2d2d", fg="white", selectcolor="#404040", activebackground="#2d2d2d", activeforeground="white").pack(side=tk.LEFT, padx=10)
+        for txt, val in [("Hide","hide"), ("Homepage","homepage"), ("Portfolio","portfolio")]:
+            tk.Radiobutton(disp_frame, text=txt, variable=self.display_var, value=val, bg="#2d2d2d", fg="white", selectcolor="#444").pack(side=tk.LEFT, padx=5)
 
-        # Buttons
-        btn_frame = tk.Frame(main_frame, bg="#2d2d2d")
-        btn_frame.pack(fill=tk.X, pady=20)
-        
-        tk.Button(btn_frame, text="<< Prev", command=self.nav_prev, bg="#4a4a4a", fg="white", padx=15).pack(side=tk.LEFT)
-        self.status_label = tk.Label(btn_frame, text="", bg="#2d2d2d", fg="#00ff00")
+        btns = tk.Frame(main, bg="#2d2d2d")
+        btns.pack(fill=tk.X, pady=10)
+        tk.Button(btns, text="<< Prev", command=self.nav_prev, bg="#444", fg="white").pack(side=tk.LEFT)
+        self.status_label = tk.Label(btns, text="", bg="#2d2d2d")
         self.status_label.pack(side=tk.LEFT, padx=20)
-        tk.Button(btn_frame, text="Next >>", command=self.nav_next, bg="#4a4a4a", fg="white", padx=15).pack(side=tk.RIGHT)
-        tk.Button(btn_frame, text="SAVE", command=self.save_data, bg="#2b8a3e", fg="white", padx=20).pack(side=tk.RIGHT, padx=20)
+        tk.Button(btns, text="Next >>", command=self.nav_next, bg="#444", fg="white").pack(side=tk.RIGHT)
+        tk.Button(btns, text="SAVE", command=self.save_data, bg="green", fg="white").pack(side=tk.RIGHT, padx=20)
 
 if __name__ == "__main__":
     root = tk.Tk()

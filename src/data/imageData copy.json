@@ -1,12 +1,11 @@
-[
+home[
     {
         "url": "Architecture_275_Cam_01_Twilight_03_1920P.jpg",
         "caption": "Wilshire: Sera Architects Inc.",
         "tags": [
             "Commercial",
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -15,8 +14,7 @@
         "caption": "8th and Marion: Williams Marketing Inc.",
         "tags": [
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -25,8 +23,7 @@
         "caption": "8th and Marion: Williams Marketing Inc.",
         "tags": [
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -36,8 +33,7 @@
         "tags": [
             "City Model",
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -47,8 +43,7 @@
         "tags": [
             "City Model",
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -57,8 +52,7 @@
         "caption": "1st & Market: Ankrom Moisan Associated Architects",
         "tags": [
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -67,8 +61,7 @@
         "caption": "1st & Market: Ankrom Moisan Associated Architects",
         "tags": [
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -77,8 +70,7 @@
         "caption": "100 Multnomah: Ankrom Moisan Associated Architects",
         "tags": [
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -88,8 +80,7 @@
         "tags": [
             "City Model",
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -99,8 +90,7 @@
         "tags": [
             "City Model",
             "Architecture",
-            "3D Animation",
-            "Exterior"
+            "3D Animation"
         ],
         "display": "portfolio"
     },
@@ -110,8 +100,7 @@
         "tags": [
             "City Model",
             "Architecture",
-            "3D Animation",
-            "Urban Design"
+            "3D Animation"
         ],
         "display": "portfolio"
     },
@@ -121,8 +110,7 @@
         "tags": [
             "City Model",
             "Architecture",
-            "3D Animation",
-            "Exterior"
+            "3D Animation"
         ],
         "display": "portfolio"
     },
@@ -132,8 +120,7 @@
         "tags": [
             "Institutional",
             "Architecture",
-            "3D Animation",
-            "Exterior"
+            "3D Animation"
         ],
         "display": "portfolio"
     },
@@ -143,8 +130,7 @@
         "tags": [
             "Institutional",
             "Architecture",
-            "3D Still",
-            "Exterior"
+            "3D Still"
         ],
         "display": "portfolio"
     },
@@ -193,7 +179,7 @@
         "caption": "Oakland Bay Bridge Main Span: TYLIN International",
         "tags": [
             "Bridges",
-            "Transportation",
+            "Transportationn",
             "3D Animation"
         ],
         "display": "portfolio"
@@ -366,7 +352,7 @@
         "tags": [
             "Streetcar",
             "Transit",
-            "Traffic",
+            "Traffic"
             "3D Animation"
         ],
         "display": "portfolio"
@@ -406,6 +392,10 @@
         "tags": [
             "High Speed Rail",
             "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
         ],
         "display": "portfolio"
     },
@@ -500,7 +490,7 @@
         "caption": "CHigh Speed Rail San Fransciso Transbay Station: California High Speed Rail Authority",
         "tags": [
             "High Speed Rail",
-            "3D Animation",
+            "3D",
             "City Model"
         ],
         "display": "portfolio"
@@ -512,8 +502,7 @@
             "High Speed Rail",
             "Transit",
             "3D Animation",
-            "City Model",
-            "Urban Design"
+            "City Model"
         ],
         "display": "portfolio"
     },
@@ -665,8 +654,7 @@
         "tags": [
             "3D Animation",
             "City Model",
-            "Architecture",
-            "Urban Design"
+            "Architecture"
         ],
         "display": "portfolio"
     },
@@ -688,8 +676,7 @@
             "High Speed Rail",
             "Transit",
             "3D Animation",
-            "Photosimulation",
-            "Urban Design"
+            "Photosimulation"
         ],
         "display": "homepage"
     },
@@ -740,7 +727,7 @@
         "caption": "Oakland Bay Bridge Cable Anchors: TYLIN",
         "tags": [
             "Bridges",
-            "Construction",
+            "construction",
             "3D Animation"
         ],
         "display": "portfolio"
@@ -789,7 +776,7 @@
         "caption": "Museum of the American Revolution: RAM Stern",
         "tags": [
             "Architecture",
-            "Institutional",
+            "Institutional"
             "3D Still"
         ],
         "display": "homepage"
@@ -833,13 +820,9 @@
     },
     {
         "url": "576_Cam_7623_15_1920P.jpg",
-        "caption": "Old Town Urban Design; SRM",
-        "tags": [
-            "Architecture",
-            "Urban Design",
-            "Photosimulation"
-        ],
-        "display": "portfolio"
+        "caption": "",
+        "tags": [],
+        "display": "hide"
     },
     {
         "url": "585-Elon-Business-School_cam-A_Unfiltered_04-LessBlur_00000.jpg",
@@ -847,8 +830,7 @@
         "tags": [
             "3D Still",
             "Architecture",
-            "Institutional",
-            "Exterior"
+            "Institutional"
         ],
         "display": "homepage"
     },
@@ -857,7 +839,7 @@
         "caption": "Moody Park Station: Aecom",
         "tags": [
             "Transit",
-            "Light Rail",
+            "light rail",
             "3D"
         ],
         "display": "portfolio"
