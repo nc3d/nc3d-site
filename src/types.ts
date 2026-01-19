@@ -11,4 +11,12 @@ export type BlogPost = {
   showImageInPost?: boolean;  // hide image on the post page if false
   fullDescription?: React.ReactNode; // long-only content (post page)
   tags?: string[];            // NEW: tags for list/post SEO
+
+  
 };
+
+export interface Slide {
+  url: string;
+  caption: string;
+  tags?: string[]; // <--- Add this line (the ? means it's optional)
+}

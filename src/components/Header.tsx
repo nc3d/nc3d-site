@@ -24,7 +24,7 @@ const Header: React.FC = () => {
         >
           Blog
         </NavLink>
-        <a href="https://airtable.com/appQ9RlJANG92aXAj/paggm3GGMGT46vCE1/form" target="_blank" rel="noopener noreferrer" className="text-lg text-gray-400 hover:text-gray-200 no-underline whitespace-nowrap">Contact</a>
+        <Link to="/contact" className="text-lg text-gray-400 hover:text-gray-200 no-underline whitespace-nowrap">Contact</Link>
         <a href="https://vimeo.com/nc3d" target="_blank" rel="noopener noreferrer" className="text-lg text-gray-400 hover:text-gray-200 no-underline whitespace-nowrap">Vimeo</a>
         <a href="https://www.linkedin.com/in/newlands/" target="_blank" rel="noopener noreferrer" className="text-lg text-gray-400 hover:text-gray-200 no-underline whitespace-nowrap">LinkedIn</a>
       </nav>
