@@ -37,14 +37,15 @@ const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % images.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
 
-  // Logic: Replaces ": " with "  |  " (two spaces on either side)
-  // Uses .replaceAll to ensure it catches every instance in the caption field
+  // Logic: Replaces ": " with "  |  "
   const formattedCaption = currentSlide.caption?.replaceAll(': ', '  |  ');
 
   return (
     <div className="w-full bg-[#565656] flex flex-col items-center">
+      
       {/* 1. The 16:9 Image Window */}
-      <div className="relative w-full max-w-screen-xl aspect-video overflow-hidden group bg-black">
+      {/* ADDED: 'rounded-lg' and 'shadow-lg' to match other site boxes */}
+      <div className="relative w-full max-w-screen-xl aspect-video overflow-hidden group bg-[#606060] rounded-lg shadow-lg">
         <div key={currentSlide.url} className="absolute inset-0 w-full h-full">
           <img 
             src={currentSlide.url} 
@@ -75,15 +76,12 @@ const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
       {/* 2. Captions (Styled exactly like CompanyStatement.tsx) */}
       <div className="w-full max-w-screen-xl px-4 md:px-0">
         <div className="px-6 py-4 bg-[#606060] text-gray-300 text-base mt-4 text-left rounded-lg shadow-lg">
-          {/* - line-clamp-3: Limits text height to 3 lines
-            - text-base: Matches company statement font size
-            - leading-relaxed: Matches site body copy spacing
-          */}
           <p className="line-clamp-3 leading-relaxed">
             {formattedCaption}
           </p>
         </div>
       </div>
+      
     </div>
   );
 };
