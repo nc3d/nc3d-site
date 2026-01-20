@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { shuffleArray, preloadImages } from '../utils/slideshowHelper';
+import React, { useState, useEffect } from 'react';
 import { Slide } from '../types';
 
 interface SlideshowProps {
@@ -7,105 +6,84 @@ interface SlideshowProps {
 }
 
 const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
-  const [shuffledImages, setShuffledImages] = useState<Slide[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (images.length > 0) {
-      const newShuffled = shuffleArray(images);
-      setShuffledImages(newShuffled);
-      setCurrentIndex(0); 
-      preloadImages(newShuffled);
-    } else {
-      setShuffledImages([]);
-    }
+    setCurrentIndex(0);
   }, [images]);
-  
-  const nextSlide = useCallback(() => {
-    if (shuffledImages.length > 0) {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % shuffledImages.length);
-    }
-  }, [shuffledImages.length]);
 
-  const prevSlide = () => {
-    if (shuffledImages.length > 0) {
-      setCurrentIndex((prevIndex) => (prevIndex - 1 + shuffledImages.length) % shuffledImages.length);
-    }
-  };
-
+  // Keyboard Navigation
   useEffect(() => {
-    if (isPaused) return;
-    const timer = setTimeout(() => {
-      nextSlide();
-    }, 5000); 
-    return () => clearTimeout(timer);
-  }, [currentIndex, isPaused, nextSlide]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!images.length) return;
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [images, currentIndex]);
 
-  if (!shuffledImages || shuffledImages.length === 0) {
+  if (!images || images.length === 0) {
     return (
-      <div className="aspect-video w-full bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
-        No images found for this category.
+      <div className="w-full aspect-video bg-gray-900 flex items-center justify-center text-white">
+        No images found.
       </div>
     );
   }
-  
-  const currentSlide = shuffledImages[currentIndex];
-  const parts = currentSlide.caption ? currentSlide.caption.split(': ') : [''];
-  const projectName = parts[0];
-  const clientName = parts[1] || '';
+
+  const safeIndex = currentIndex >= images.length ? 0 : currentIndex;
+  const currentSlide = images[safeIndex];
+
+  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % images.length);
+  const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  // Logic: Replaces ": " with "  |  " (two spaces on either side)
+  // Uses .replaceAll to ensure it catches every instance in the caption field
+  const formattedCaption = currentSlide.caption?.replaceAll(': ', '  |  ');
 
   return (
-    <div className="w-full">
-      
-      {/* SLIDESHOW WINDOW */}
-      <div 
-        className="relative w-full aspect-video overflow-hidden rounded-lg shadow-2xl bg-black"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        <img
-          key={currentSlide.url}
-          src={currentSlide.url}
-          alt={currentSlide.caption}
-          className="absolute inset-0 w-full h-full object-cover animate-fade-in"
-        />
-
-        {/* OVERLAY CAPTION */}
-        <div className="absolute bottom-0 left-0 w-full px-6 py-3">
-          {/* UPDATED: 
-              - Removed 'font-bold'
-              - Added strong custom drop-shadow
-          */}
-          <div className="text-sm text-gray-200 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-            {projectName}
-            {clientName && (
-              <span> | {clientName}</span>
-            )}
-          </div>
+    <div className="w-full bg-[#565656] flex flex-col items-center">
+      {/* 1. The 16:9 Image Window */}
+      <div className="relative w-full max-w-screen-xl aspect-video overflow-hidden group bg-black">
+        <div key={currentSlide.url} className="absolute inset-0 w-full h-full">
+          <img 
+            src={currentSlide.url} 
+            alt={currentSlide.caption} 
+            className="w-full h-full object-cover" 
+          />
         </div>
 
-        {/* Navigation Buttons */}
-        <button 
-          onClick={prevSlide}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors focus:outline-none focus:ring-2 focus:ring-white opacity-0 group-hover:opacity-100 sm:opacity-50 sm:hover:opacity-100"
-          aria-label="Previous slide"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button 
-          onClick={nextSlide}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors focus:outline-none focus:ring-2 focus:ring-white opacity-0 group-hover:opacity-100 sm:opacity-50 sm:hover:opacity-100"
-          aria-label="Next slide"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        {/* Navigation Arrows */}
+        {images.length > 1 && (
+          <>
+            <button 
+              onClick={prevSlide} 
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/50 p-4 rounded-full text-white z-20 transition-opacity opacity-0 group-hover:opacity-100"
+            >
+              &#10094;
+            </button>
+            <button 
+              onClick={nextSlide} 
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/50 p-4 rounded-full text-white z-20 transition-opacity opacity-0 group-hover:opacity-100"
+            >
+              &#10095;
+            </button>
+          </>
+        )}
       </div>
 
+      {/* 2. Captions (Styled exactly like CompanyStatement.tsx) */}
+      <div className="w-full max-w-screen-xl px-4 md:px-0">
+        <div className="px-6 py-4 bg-[#606060] text-gray-300 text-base mt-4 text-left rounded-lg shadow-lg">
+          {/* - line-clamp-3: Limits text height to 3 lines
+            - text-base: Matches company statement font size
+            - leading-relaxed: Matches site body copy spacing
+          */}
+          <p className="line-clamp-3 leading-relaxed">
+            {formattedCaption}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

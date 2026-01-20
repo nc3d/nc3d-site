@@ -132,99 +132,22 @@ View your app in AI Studio: https://ai.studio/apps/temp/2
 --- START FILE: server.cjs ---
 require('dotenv').config();
 const express = require('express');
-const nodemailer = require('nodemailer');
-const Airtable = require('airtable');
 const path = require('path');
-const multer = require('multer'); // Import multer
-
 const app = express();
+
 const PORT = process.env.PORT || 3000;
+const DIST_DIR = path.join(__dirname, 'dist');
 
-// Configure Multer (Handle file uploads in memory)
-const upload = multer({ 
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // Limit to 10MB
-});
+// 1. Serve static files from the build folder
+app.use(express.static(DIST_DIR));
 
-// Serve Static Files
-app.use(express.static(path.join(__dirname, 'dist')));
-app.use('/projects', express.static(path.join(__dirname, 'projects')));
-
-// Configuration
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
-
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: true, 
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
-
-// --- API ROUTE (Note: 'upload.single' middleware) ---
-app.post('/submit-contact', upload.single('attachment'), async (req, res) => {
-    // req.body contains text fields
-    // req.file contains the uploaded file (if any)
-    const { name, email, message, phone, newsletter } = req.body;
-    
-    console.log(`Received contact from: ${name}`);
-
-    try {
-        // 1. Save Text Data to Airtable
-        // We add a note if a file was attached so you know to check email
-        const fileNote = req.file ? "\n\n[File Attached in Email]" : "";
-        
-        await base(process.env.AIRTABLE_TABLE_NAME).create([
-            {
-                "fields": {
-                    "Name": name,
-                    "Email": email,
-                    "Notes": message + fileNote, // Mapping 'message' to 'Notes'
-                    "Phone": phone,
-                    "Newsletter": newsletter === 'true', // FormData sends booleans as strings
-                    
-                }
-            }
-        ]);
-
-        // 2. Prepare Email Options
-        const mailOptions = {
-            from: `"NC3D Website" <${process.env.SMTP_USER}>`,
-            to: 'contact@nc3d.com', 
-            replyTo: email,
-            subject: `New Inquiry: ${name}`,
-            text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nNotes:\n${message}\n\nNewsletter: ${newsletter === 'true' ? 'Yes' : 'No'}`,
-            attachments: []
-        };
-
-        // 3. Attach File if exists
-        if (req.file) {
-            mailOptions.attachments.push({
-                filename: req.file.originalname,
-                content: req.file.buffer
-            });
-        }
-
-        // 4. Send Email
-        await transporter.sendMail(mailOptions);
-
-        res.json({ success: true, message: 'Message sent!' });
-
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, message: 'Server error.' });
-    }
-});
-
-// Catch-all
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// 2. Handle React Routing (Fallthrough for anything not found above)
+app.use((req, res) => {
+  res.sendFile(path.join(DIST_DIR, 'index.html'));
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
 --- END FILE: server.cjs ---
 
@@ -3734,113 +3657,114 @@ export default Header;
 
 --- START FILE: src\components\Slideshow.tsx ---
 import React, { useState, useEffect, useCallback } from 'react';
-import { shuffleArray, preloadImages } from '../utils/slideshowHelper';
+import { slideshowImages, preloadImages } from '../utils/slideshowHelper';
 import { Slide } from '../types';
 
 interface SlideshowProps {
-  images: Slide[];
+  interval?: number;
 }
 
-const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
-  const [shuffledImages, setShuffledImages] = useState<Slide[]>([]);
+// --- ROBUST SHUFFLE FUNCTION (Defined outside to prevent React interference) ---
+const getShuffledSlides = (sourceArray: Slide[]) => {
+  if (!sourceArray || sourceArray.length === 0) return [];
+  
+  // 1. Create a hard copy
+  const newArray = [...sourceArray];
+  
+  // 2. Fisher-Yates Shuffle (Old School Swap)
+  let currentIndex = newArray.length;
+  let randomIndex;
+
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // robust manual swap
+    const temp = newArray[currentIndex];
+    newArray[currentIndex] = newArray[randomIndex];
+    newArray[randomIndex] = temp;
+  }
+  return newArray;
+};
+
+const Slideshow: React.FC<SlideshowProps> = ({ interval = 5000 }) => {
+  // --- SYNCHRONOUS INIT ---
+  // Runs once before the first render to ensure random order immediately
+  const [slides] = useState<Slide[]>(() => getShuffledSlides(slideshowImages));
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Preload
   useEffect(() => {
-    if (images.length > 0) {
-      const newShuffled = shuffleArray(images);
-      setShuffledImages(newShuffled);
-      setCurrentIndex(0); 
-      preloadImages(newShuffled);
-    } else {
-      setShuffledImages([]);
-    }
-  }, [images]);
-  
+    if (slides.length > 0) preloadImages(slides.slice(0, 5));
+  }, [slides]);
+
+  // Navigation
   const nextSlide = useCallback(() => {
-    if (shuffledImages.length > 0) {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % shuffledImages.length);
+    if (slides.length > 0) {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
     }
-  }, [shuffledImages.length]);
+  }, [slides.length]);
 
-  const prevSlide = () => {
-    if (shuffledImages.length > 0) {
-      setCurrentIndex((prevIndex) => (prevIndex - 1 + shuffledImages.length) % shuffledImages.length);
+  const prevSlide = useCallback(() => {
+    if (slides.length > 0) {
+      setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
     }
-  };
+  }, [slides.length]);
 
+  // Timer
   useEffect(() => {
-    if (isPaused) return;
-    const timer = setTimeout(() => {
-      nextSlide();
-    }, 5000); 
-    return () => clearTimeout(timer);
-  }, [currentIndex, isPaused, nextSlide]);
+    if (isPaused || slides.length === 0) return;
+    const timer = setInterval(nextSlide, interval);
+    return () => clearInterval(timer);
+  }, [isPaused, interval, nextSlide, slides.length]);
 
-  if (!shuffledImages || shuffledImages.length === 0) {
-    return (
-      <div className="aspect-video w-full bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
-        No images found for this category.
-      </div>
-    );
-  }
-  
-  const currentSlide = shuffledImages[currentIndex];
+  // Keyboard
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') { prevSlide(); setIsPaused(true); } 
+      else if (e.key === 'ArrowRight') { nextSlide(); setIsPaused(true); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [prevSlide, nextSlide]);
+
+  if (slides.length === 0) return <div className="h-screen bg-black" />;
+
+  const currentSlide = slides[currentIndex];
   const parts = currentSlide.caption ? currentSlide.caption.split(': ') : [''];
-  const projectName = parts[0];
-  const clientName = parts[1] || '';
 
   return (
-    <div className="w-full">
-      
-      {/* SLIDESHOW WINDOW */}
+    <div className="w-full flex justify-center bg-black">
       <div 
-        className="relative w-full aspect-video overflow-hidden rounded-lg shadow-2xl bg-black"
+        className="relative w-full aspect-video overflow-hidden shadow-2xl bg-black group"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         <img
-          key={currentSlide.url}
+          key={currentSlide.url} 
           src={currentSlide.url}
           alt={currentSlide.caption}
           className="absolute inset-0 w-full h-full object-cover animate-fade-in"
         />
 
-        {/* OVERLAY CAPTION */}
-        <div className="absolute bottom-0 left-0 w-full px-6 py-3">
-          {/* UPDATED: 
-              - Removed 'font-bold'
-              - Added strong custom drop-shadow
-          */}
-          <div className="text-sm text-gray-200 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-            {projectName}
-            {clientName && (
-              <span> | {clientName}</span>
-            )}
+        {/* Caption */}
+        <div className="absolute bottom-0 left-0 w-full px-6 py-4">
+          <div className="text-sm font-medium text-gray-400 drop-shadow-[0_2px_2px_rgba(0,0,0,1)]">
+            {parts[0]}
+            {parts[1] && <span className="text-gray-500 font-normal"> | {parts[1]}</span>}
           </div>
         </div>
 
-        {/* Navigation Buttons */}
-        <button 
-          onClick={prevSlide}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors focus:outline-none focus:ring-2 focus:ring-white opacity-0 group-hover:opacity-100 sm:opacity-50 sm:hover:opacity-100"
-          aria-label="Previous slide"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+        {/* Arrows */}
+        <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70">
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
-        <button 
-          onClick={nextSlide}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors focus:outline-none focus:ring-2 focus:ring-white opacity-0 group-hover:opacity-100 sm:opacity-50 sm:hover:opacity-100"
-          aria-label="Next slide"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+        <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70">
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
       </div>
-
     </div>
   );
 };
@@ -4045,307 +3969,1735 @@ export const blogPosts: BlogPost[] = [
 
 --- END FILE: src\data\blogPosts.tsx ---
 
---- START FILE: src\data\imageData.ts ---
-import { Slide } from '../types';
-
-export const imageData: Slide[] = [
+--- START FILE: src\data\imageData copy.json ---
+home[
     {
         "url": "Architecture_275_Cam_01_Twilight_03_1920P.jpg",
         "caption": "Wilshire: Sera Architects Inc.",
-        "tags": ["Commercial", "Architecture", "3D"]
+        "tags": [
+            "Commercial",
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_313_Cam_B_08_1920P.jpg",
         "caption": "8th and Marion: Williams Marketing Inc.",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_313_Cam_B_Day_05_1920P.jpg",
         "caption": "8th and Marion: Williams Marketing Inc.",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_319_Daytime_A_03_1920P.jpg",
         "caption": "South Waterfront Block 31: Ankrom Moisan Associated Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_319_Night_D_05_1920P.jpg",
         "caption": "South Waterfront Block 31: Ankrom Moisan Associated Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_335_A_14_1920P.jpg",
         "caption": "1st & Market: Ankrom Moisan Associated Architects",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_335_A_Night_03_1920P.jpg",
         "caption": "1st & Market: Ankrom Moisan Associated Architects",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_337_Eye_SE_06_1920P.jpg",
         "caption": "100 Multnomah: Ankrom Moisan Associated Architects",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_339_NE_CornerB_04_1920P.jpg",
         "caption": "1st & Main: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_353_Night1_04_1920P.jpg",
         "caption": "South Waterfront Block 42: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_382_0002_NW_Aerial_01_1920P.jpg",
         "caption": "Vestas South Waterfront: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_382_Still_01_02_1920P.jpg",
         "caption": "Vestas South Waterfront: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_428_Good_Sam_Exterior_Ext_Entry_C_Still_1920P.jpg",
         "caption": "Good Samaritan Hospital: MultiCare Health System",
-        "tags": ["Institutional", "Architecture", "3D"]
+        "tags": [
+            "Institutional",
+            "Architecture",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Architecture_505_Corner_Option_01_06_1920P.jpg",
-        "caption": "Elon University: Robert A.M. Stern Architects LLP",
-        "tags": ["Institutional", "Architecture", "3D"]
+        "caption": "Elon University Communication Building: Robert A.M. Stern Architects",
+        "tags": [
+            "Institutional",
+            "Architecture",
+            "3D Still"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_315_031_Bakersfield_B_01_0000_1920P.jpg",
-        "caption": "CHSR Kern River Bridge Concept: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "caption": "CHigh Speed Rail Kern River Bridge Concept: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Bridges"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_315_116_05_02_2_E_Bridge_Boomerang_05_1920P.jpg",
-        "caption": "CHSR San Jose Bridge Study: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "caption": "CHigh Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Bridges"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_315_116_05_02_3_E_Bridge_TransverseArch_Night_HiRez_05_1920P.jpg",
-        "caption": "CHSR San Jose Bridge Study: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "caption": "CHigh Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Bridges"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_402_Still_A_1920P.jpg",
         "caption": "Minneapolis Lowry Avenue Bridge: TYLIN International",
-        "tags": ["Bridges", "3D"]
+        "tags": [
+            "Bridges",
+            "3D Animation",
+            "Transportation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_404_Establish_B_6k_0000_01_1920P.jpg",
         "caption": "Oakland Bay Bridge Main Span: TYLIN International",
-        "tags": ["Bridges", "3D"]
+        "tags": [
+            "Bridges",
+            "Transportationn",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_404_night_shot_C1_0000_1920P.jpg",
         "caption": "Oakland Bay Bridge Main Span: TYLIN International",
-        "tags": ["Bridges", "3D"]
+        "tags": [
+            "Bridges",
+            "3D Still",
+            "Transportation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_404_night_shot_C2_LP_0000_1920P.jpg",
         "caption": "Oakland Bay Bridge Main Span: TYLIN International",
-        "tags": ["Bridges", "3D"]
+        "tags": [
+            "Bridges",
+            "3D Still",
+            "Transportation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Bridges_404_Pier_e2_Anchor_B_CLR_02_1920P.jpg",
         "caption": "Oakland Bay Bridge Cable Anchors : TYLIN International",
-        "tags": ["Bridges", "3D"]
+        "tags": [
+            "Bridges",
+            "3D Animation",
+            "Construction"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_339_LobbyStill_A_05_1920P.jpg",
         "caption": "1st & Main: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_339_LobbyStill_C_05_1920P.jpg",
         "caption": "1st & Main: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_357_Adult_ED_A_0150_1920P.jpg",
         "caption": "Tacoma General Hospital: MultiCare",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Animation",
+            "Interior",
+            "Institutional"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_357_Adult_ED_C_0100_1920P.jpg",
         "caption": "Tacoma General Hospital: MultiCare",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D Animation",
+            "Interior",
+            "Institutional"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_357_ED_hallway_4K_01_1920P.jpg",
         "caption": "Tacoma General Hospital: MultiCare",
-        "tags": ["Architecture", "3D"]
+        "tags": [
+            "Architecture",
+            "3D",
+            "Interior",
+            "Institutional"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_420_Cam_A_03_1920P.jpg",
-        "caption": "College Station Revisions: Sera Architects Inc.",
-        "tags": ["City Model", "Architecture", "3D"]
+        "caption": "College Station: Sera Architects Inc.",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still",
+            "Residential",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_468_Lobby_D_03_1920P.jpg",
         "caption": "Yeon Building: Sera Architects Inc.",
-        "tags": ["Commercial", "Architecture", "3D"]
+        "tags": [
+            "Commercial",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_476_Lounge_Still_G_24mm_4k_01_1920P.jpg",
         "caption": "Drexel University: American Campus Communities Inc",
-        "tags": ["Residential", "Architecture", "3D"]
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_476_Unit_B_Still_C_02_1920P.jpg",
         "caption": "Drexel University: American Campus Communities Inc",
-        "tags": ["Residential", "Architecture", "3D"]
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_476_Unit_D_Still_A_02_1920P.jpg",
         "caption": "Drexel University: American Campus Communities Inc",
-        "tags": ["Residential", "Architecture", "3D"]
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Interiors_501_D2_E_Still_0300_1920P.jpg",
         "caption": "ACC Copeland: American Campus Communities Inc",
-        "tags": ["Residential", "Architecture", "3D"]
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D",
+            "Interior"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_255_01a_05_1920P.jpg",
         "caption": "Spokane Streetcar: AECOM",
-        "tags": ["Streetcar", "Transit", "3D"]
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_278_CamB_Still02_01_1920P.jpg",
         "caption": "Tucson Streetcar: HDR",
-        "tags": ["Streetcar", "Transit", "3D"]
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "Traffic"
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_278_CamC_Still_01_1920P.jpg",
         "caption": "Tucson Streetcar: HDR",
-        "tags": ["Streetcar", "Transit", "3D"]
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "Traffic",
+            "3D"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_315_006_Tehachapi_A_02_3600x2025_1920P.jpg",
         "caption": "California High Speed Rail Project, Tehatchapi Pass: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_315_007_BNSF_A_02_3600x2025_1920P.jpg",
         "caption": "California High Speed Rail Project, Central Valley: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_315_033_hmm_FINAL_1920P.jpg",
         "caption": "California High Speed Rail Project: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_367_02_02_Blackstone_700_1920P.jpg",
-        "caption": "Fresno PTIS (Streetcar): Kimley-Horn & Associates Inc.",
-        "tags": ["Streetcar", "Transit", "3D"]
+        "caption": "Fresno PTIS: Kimley-Horn & Associates Inc.",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_369_05_Allen_temple_B0898_1920P.jpg",
         "caption": "East Bay BRT: Singer Associates Inc.",
-        "tags": ["Bus Rapid Transit", "Transit", "3D"]
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_398_1920P.jpg",
         "caption": "Vancouver 4th Plain BRT: WSP",
-        "tags": ["Bus Rapid Transit", "Transit", "3D"]
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_398_Grand_Still_B_01_1920P.jpg",
         "caption": "Vancouver 4th Plain BRT: WSP",
-        "tags": ["Bus Rapid Transit", "Transit", "3D"]
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_398_Kyocera_Still_B_01_1920P.jpg",
         "caption": "Vancouver 4th Plain BRT: WSP",
-        "tags": ["Bus Rapid Transit", "3D"]
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_417_23_Monroe_St_5703_10_1920P.jpg",
         "caption": "Portland/Milwalkie LRT FEIS: David Evans & Associates",
-        "tags": ["Light Rail", "Transit", "3D"]
+        "tags": [
+            "Light Rail",
+            "Transit",
+            "Photosimulation",
+            "DEIS"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_425_Staples_Poster_03_1920P.jpg",
         "caption": "LA Streetcar: LA Streetcar, Inc.",
-        "tags": ["Streetcar", "Transit", "3D"]
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "3D Animation",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Transit_Fresno_PTIS_Theater_Still_A_01_1920P.jpg",
         "caption": "Fresno PTIS (Streetcar): Kimley-Horn & Associates Inc.",
-        "tags": ["Streetcar", "Transit", "3D"]
-    }, 
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
     {
         "url": "Urban-Design_315_0017_CamPlaza_0767_1920P.jpg",
-        "caption": "CHSR San Fransciso Transbay Station: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "caption": "CHigh Speed Rail San Fransciso Transbay Station: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D",
+            "City Model"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_315_016_San_Jose_A_01_4800x2700_1920P.jpg",
         "caption": "California High Speed Rail Project, San Jose Station: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "tags": [
+            "High Speed Rail",
+            "Transit",
+            "3D Animation",
+            "City Model"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_315_018_Sacramento_A_01_4800x2700_1920P.jpg",
-        "caption": "CHSR, Sacramento Station Area Development: California High Speed Rail Authority",
-        "tags": ["HSR", "3D"]
+        "caption": "CHigh Speed Rail, Sacramento Station Area Development: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Urban Design",
+            "City Model"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_382_0002_SW_Mid_01.tif_1920P.jpg",
         "caption": "Vestas South Waterfront Proposal: GBD Architects",
-        "tags": ["City Model", "Architecture", "3D"]
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D"
+        ],
+        "display": "hide"
     },
     {
         "url": "Urban-Design_445_OHSU_Downtown_B_01_1920P.jpg",
         "caption": "Portland City Model: NC3D",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_458_Portland_EcoDistricts_Downtown_HiRes_0000_Base_Image_1920P.jpg",
         "caption": "Portland City Model : NC3D",
-        "tags": ["Planning", "City Model", "3D"]
+        "tags": [
+            "Planning",
+            "City Model",
+            "3D Animation"
+        ],
+        "display": "hide"
     },
     {
         "url": "Urban-Design_466_Cam_D_0344_4K_01_1920P.jpg",
         "caption": "Jubail City Centre: Wilbur Smith Associates",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation",
+            "Planning"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_466_Cam_F_0261_4K_01_1920P.jpg",
         "caption": "Jubail City Centre: Wilbur Smith Associates",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation",
+            "Planning"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_576_Cam_7962_06_1920P.jpg",
         "caption": "Old Town Urban Design: SRM Architecture",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_900_sowa_a_proposed_01_1920P.jpg",
         "caption": "South Waterfront Planning Study: OHSU",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_900_sowa_b_existing_01_1920P.jpg",
         "caption": "South Waterfront Planning Study: OHSU",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
     },
     {
         "url": "Urban-Design_900_sowa_b_proposed_01_1920P.jpg",
         "caption": "South Waterfront Planning Study: OHSU",
-        "tags": ["City Model", "Urban Design", "3D"]
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_357_Chapel_4K_01_1920P.jpg",
+        "caption": "Good Samaritan Hospital: MultiCare Health System",
+        "tags": [
+            "Interior",
+            "3D Animation",
+            "Institutional"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_315_001_MissionBay_C_03_3600x2025_1920P.jpg",
+        "caption": "California High Speed Rail Project San Diego",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_4-4-2013-2-28-17-PM_1920P.jpg",
+        "caption": "4th Plain BRT",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "Urban-Design_466_Cam_EB_0052_4K_01_1920P.jpg",
+        "caption": "Jubail City Center",
+        "tags": [
+            "3D Animation",
+            "Urban Design",
+            "Planning"
+        ],
+        "display": "hide"
+    },
+    {
+        "url": "Urban-Design_NC3D_382_0002_SW_Mid_01.tif_1920P.jpg",
+        "caption": "Vestas South Waterfront: GBD Architects",
+        "tags": [
+            "3D Animation",
+            "City Model",
+            "Architecture"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_NC3D_458_Portland_EcoDistricts_Downtown_HiRes_0000_Base_Image_1920P.jpg",
+        "caption": "Portland City Model: NC3D",
+        "tags": [
+            "3D Animation",
+            "City Model",
+            "Urban Design",
+            "Planning"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "315_116_300_1_DiridonAerial_Design_Crop_01.jpg",
+        "caption": "San Jose Diridon Station: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "Transit",
+            "3D Animation",
+            "Photosimulation"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "362_shot_A.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "402_Lowry_Ave_E.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "404_07_DirectorsCut_01.png",
+        "caption": "Oakland Bay Bridge Load Transfer: TYLIN",
+        "tags": [
+            "Construction",
+            "Bridges",
+            "3D Animation"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "404_07_DirectorsCut_02.png",
+        "caption": "Oakland Bay Bridge Load Transfer: TYLIN",
+        "tags": [
+            "Construction",
+            "Bridges",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "404_Hinge_Pipe_4k_01_0000.jpg",
+        "caption": "Oakland Bay Bridge Siesmic Fuse: TYLIN",
+        "tags": [
+            "Bridges",
+            "Construction",
+            "3D"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "404_Pier_e2_Anchor_B_CLR_02.jpg",
+        "caption": "Oakland Bay Bridge Cable Anchors: TYLIN",
+        "tags": [
+            "Bridges",
+            "construction",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "41.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "417_30_99E_NB_5343_03.jpg",
+        "caption": "Portland Light Rail Milaukie Extension: Tri-Met",
+        "tags": [
+            "Photosimulation",
+            "DEIS",
+            "Light Rail",
+            "Transit"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "428_Good_Sam_INT_Surgery_0224.jpg",
+        "caption": "Good Samaritan Hospital: Multicare",
+        "tags": [
+            "Institutional",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "444-Credit-River-A01.png",
+        "caption": "Credit River Bridge: WSP",
+        "tags": [
+            "Bridges",
+            "traffic",
+            "3D Animation",
+            "highways"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "485_Cam_C_Night_PSD_1920P.jpg",
+        "caption": "Museum of the American Revolution: RAM Stern",
+        "tags": [
+            "Architecture",
+            "Institutional"
+            "3D Still"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "521_6thStreetBridge_Stage_5_04.jpg",
+        "caption": "6th Street Bridge Stage 5",
+        "tags": [
+            "construction",
+            "Bridges",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "528_Kosciuszko_4D_01.png",
+        "caption": "Kosciuszko Bridge",
+        "tags": [
+            "Bridges",
+            "construction",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "528_Kosciuszko_4D_02.png",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "528_Kosciuzko_bridge_12.png",
+        "caption": "Kosciuszko Bridge Proposal",
+        "tags": [
+            "3D Animation",
+            "Bridges",
+            "traffic",
+            "highways"
+        ],
+        "display": "hide"
+    },
+    {
+        "url": "576_Cam_7623_15_1920P.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "585-Elon-Business-School_cam-A_Unfiltered_04-LessBlur_00000.jpg",
+        "caption": "Elon University Business School: RAM Stern",
+        "tags": [
+            "3D Still",
+            "Architecture",
+            "Institutional"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "MoodyPark_Still_FinalComposite_UNBorked.jpg",
+        "caption": "Moody Park Station: Aecom",
+        "tags": [
+            "Transit",
+            "light rail",
+            "3D"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "vlcsnap-2016-02-25-13h00m06s153.png",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
     }
-];
---- END FILE: src\data\imageData.ts ---
+]
+--- END FILE: src\data\imageData copy.json ---
+
+--- START FILE: src\data\imageData.json ---
+[
+    {
+        "url": "Architecture_275_Cam_01_Twilight_03_1920P.jpg",
+        "caption": "Wilshire: Sera Architects Inc.",
+        "tags": [
+            "Commercial",
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_313_Cam_B_08_1920P.jpg",
+        "caption": "8th and Marion: Williams Marketing Inc.",
+        "tags": [
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_313_Cam_B_Day_05_1920P.jpg",
+        "caption": "8th and Marion: Williams Marketing Inc.",
+        "tags": [
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_319_Daytime_A_03_1920P.jpg",
+        "caption": "South Waterfront Block 31: Ankrom Moisan Associated Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_319_Night_D_05_1920P.jpg",
+        "caption": "South Waterfront Block 31: Ankrom Moisan Associated Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_335_A_14_1920P.jpg",
+        "caption": "1st & Market: Ankrom Moisan Associated Architects",
+        "tags": [
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_335_A_Night_03_1920P.jpg",
+        "caption": "1st & Market: Ankrom Moisan Associated Architects",
+        "tags": [
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_337_Eye_SE_06_1920P.jpg",
+        "caption": "100 Multnomah: Ankrom Moisan Associated Architects",
+        "tags": [
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_339_NE_CornerB_04_1920P.jpg",
+        "caption": "1st & Main: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_353_Night1_04_1920P.jpg",
+        "caption": "South Waterfront Block 42: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_382_0002_NW_Aerial_01_1920P.jpg",
+        "caption": "Vestas South Waterfront: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Urban Design"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_382_Still_01_02_1920P.jpg",
+        "caption": "Vestas South Waterfront: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_428_Good_Sam_Exterior_Ext_Entry_C_Still_1920P.jpg",
+        "caption": "Good Samaritan Hospital: MultiCare Health System",
+        "tags": [
+            "Institutional",
+            "Architecture",
+            "3D Animation",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Architecture_505_Corner_Option_01_06_1920P.jpg",
+        "caption": "Elon University Communication Building: Robert A.M. Stern Architects",
+        "tags": [
+            "Institutional",
+            "Architecture",
+            "3D Still",
+            "Exterior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_315_031_Bakersfield_B_01_0000_1920P.jpg",
+        "caption": "CHigh Speed Rail Kern River Bridge Concept: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Bridges"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_315_116_05_02_2_E_Bridge_Boomerang_05_1920P.jpg",
+        "caption": "CHigh Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Bridges"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_315_116_05_02_3_E_Bridge_TransverseArch_Night_HiRez_05_1920P.jpg",
+        "caption": "CHigh Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Bridges"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_402_Still_A_1920P.jpg",
+        "caption": "Minneapolis Lowry Avenue Bridge: TYLIN International",
+        "tags": [
+            "Bridges",
+            "3D Animation",
+            "Transportation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_404_Establish_B_6k_0000_01_1920P.jpg",
+        "caption": "Oakland Bay Bridge Main Span: TYLIN International",
+        "tags": [
+            "Bridges",
+            "Transportation",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_404_night_shot_C1_0000_1920P.jpg",
+        "caption": "Oakland Bay Bridge Main Span: TYLIN International",
+        "tags": [
+            "Bridges",
+            "3D Still",
+            "Transportation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_404_night_shot_C2_LP_0000_1920P.jpg",
+        "caption": "Oakland Bay Bridge Main Span: TYLIN International",
+        "tags": [
+            "Bridges",
+            "3D Still",
+            "Transportation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Bridges_404_Pier_e2_Anchor_B_CLR_02_1920P.jpg",
+        "caption": "Oakland Bay Bridge Cable Anchors : TYLIN International",
+        "tags": [
+            "Bridges",
+            "3D Animation",
+            "Construction"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_339_LobbyStill_A_05_1920P.jpg",
+        "caption": "1st & Main: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_339_LobbyStill_C_05_1920P.jpg",
+        "caption": "1st & Main: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_357_Adult_ED_A_0150_1920P.jpg",
+        "caption": "Tacoma General Hospital: MultiCare",
+        "tags": [
+            "Architecture",
+            "3D Animation",
+            "Interior",
+            "Institutional"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_357_Adult_ED_C_0100_1920P.jpg",
+        "caption": "Tacoma General Hospital: MultiCare",
+        "tags": [
+            "Architecture",
+            "3D Animation",
+            "Interior",
+            "Institutional"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_357_ED_hallway_4K_01_1920P.jpg",
+        "caption": "Tacoma General Hospital: MultiCare",
+        "tags": [
+            "Architecture",
+            "3D",
+            "Interior",
+            "Institutional"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_420_Cam_A_03_1920P.jpg",
+        "caption": "College Station: Sera Architects Inc.",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D Still",
+            "Residential",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_468_Lobby_D_03_1920P.jpg",
+        "caption": "Yeon Building: Sera Architects Inc.",
+        "tags": [
+            "Commercial",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_476_Lounge_Still_G_24mm_4k_01_1920P.jpg",
+        "caption": "Drexel University: American Campus Communities Inc",
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_476_Unit_B_Still_C_02_1920P.jpg",
+        "caption": "Drexel University: American Campus Communities Inc",
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_476_Unit_D_Still_A_02_1920P.jpg",
+        "caption": "Drexel University: American Campus Communities Inc",
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_501_D2_E_Still_0300_1920P.jpg",
+        "caption": "ACC Copeland: American Campus Communities Inc",
+        "tags": [
+            "Residential",
+            "Architecture",
+            "3D",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_255_01a_05_1920P.jpg",
+        "caption": "Spokane Streetcar: AECOM",
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_278_CamB_Still02_01_1920P.jpg",
+        "caption": "Tucson Streetcar: HDR",
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "Traffic",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_278_CamC_Still_01_1920P.jpg",
+        "caption": "Tucson Streetcar: HDR",
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "Traffic",
+            "3D"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_315_006_Tehachapi_A_02_3600x2025_1920P.jpg",
+        "caption": "California High Speed Rail Project, Tehatchapi Pass: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_315_007_BNSF_A_02_3600x2025_1920P.jpg",
+        "caption": "California High Speed Rail Project, Central Valley: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_315_033_hmm_FINAL_1920P.jpg",
+        "caption": "California High Speed Rail Project: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_367_02_02_Blackstone_700_1920P.jpg",
+        "caption": "Fresno PTIS: Kimley-Horn & Associates Inc.",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_369_05_Allen_temple_B0898_1920P.jpg",
+        "caption": "East Bay BRT: Singer Associates Inc.",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_398_1920P.jpg",
+        "caption": "Vancouver 4th Plain BRT: WSP",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_398_Grand_Still_B_01_1920P.jpg",
+        "caption": "Vancouver 4th Plain BRT: WSP",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_398_Kyocera_Still_B_01_1920P.jpg",
+        "caption": "Vancouver 4th Plain BRT: WSP",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation",
+            "Traffic"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_417_23_Monroe_St_5703_10_1920P.jpg",
+        "caption": "Portland/Milwalkie LRT FEIS: David Evans & Associates",
+        "tags": [
+            "Light Rail",
+            "Transit",
+            "Photosimulation",
+            "DEIS"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_425_Staples_Poster_03_1920P.jpg",
+        "caption": "LA Streetcar: LA Streetcar, Inc.",
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "3D Animation",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_Fresno_PTIS_Theater_Still_A_01_1920P.jpg",
+        "caption": "Fresno PTIS (Streetcar): Kimley-Horn & Associates Inc.",
+        "tags": [
+            "Streetcar",
+            "Transit",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_315_0017_CamPlaza_0767_1920P.jpg",
+        "caption": "CHigh Speed Rail San Fransciso Transbay Station: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "City Model"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_315_016_San_Jose_A_01_4800x2700_1920P.jpg",
+        "caption": "California High Speed Rail Project, San Jose Station: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "Transit",
+            "3D Animation",
+            "City Model",
+            "Urban Design"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_315_018_Sacramento_A_01_4800x2700_1920P.jpg",
+        "caption": "CHigh Speed Rail, Sacramento Station Area Development: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation",
+            "Urban Design",
+            "City Model"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_382_0002_SW_Mid_01.tif_1920P.jpg",
+        "caption": "Vestas South Waterfront Proposal: GBD Architects",
+        "tags": [
+            "City Model",
+            "Architecture",
+            "3D"
+        ],
+        "display": "hide"
+    },
+    {
+        "url": "Urban-Design_445_OHSU_Downtown_B_01_1920P.jpg",
+        "caption": "Portland City Model: NC3D",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_458_Portland_EcoDistricts_Downtown_HiRes_0000_Base_Image_1920P.jpg",
+        "caption": "Portland City Model : NC3D",
+        "tags": [
+            "Planning",
+            "City Model",
+            "3D Animation"
+        ],
+        "display": "hide"
+    },
+    {
+        "url": "Urban-Design_466_Cam_D_0344_4K_01_1920P.jpg",
+        "caption": "Jubail City Centre: Wilbur Smith Associates",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation",
+            "Planning"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_466_Cam_F_0261_4K_01_1920P.jpg",
+        "caption": "Jubail City Centre: Wilbur Smith Associates",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation",
+            "Planning"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_576_Cam_7962_06_1920P.jpg",
+        "caption": "Old Town Urban Design: SRM Architecture",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_900_sowa_a_proposed_01_1920P.jpg",
+        "caption": "South Waterfront Planning Study: OHSU",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_900_sowa_b_existing_01_1920P.jpg",
+        "caption": "South Waterfront Planning Study: OHSU",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_900_sowa_b_proposed_01_1920P.jpg",
+        "caption": "South Waterfront Planning Study: OHSU",
+        "tags": [
+            "City Model",
+            "Urban Design",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Interiors_357_Chapel_4K_01_1920P.jpg",
+        "caption": "Good Samaritan Hospital: MultiCare Health System",
+        "tags": [
+            "Interior",
+            "3D Animation",
+            "Institutional"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_315_001_MissionBay_C_03_3600x2025_1920P.jpg",
+        "caption": "California High Speed Rail Project San Diego",
+        "tags": [
+            "High Speed Rail",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Transit_4-4-2013-2-28-17-PM_1920P.jpg",
+        "caption": "4th Plain BRT",
+        "tags": [
+            "Bus Rapid Transit",
+            "Transit",
+            "3D Animation"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "Urban-Design_466_Cam_EB_0052_4K_01_1920P.jpg",
+        "caption": "Jubail City Center",
+        "tags": [
+            "3D Animation",
+            "Urban Design",
+            "Planning"
+        ],
+        "display": "hide"
+    },
+    {
+        "url": "Urban-Design_NC3D_382_0002_SW_Mid_01.tif_1920P.jpg",
+        "caption": "Vestas South Waterfront: GBD Architects",
+        "tags": [
+            "3D Animation",
+            "City Model",
+            "Architecture",
+            "Urban Design"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "Urban-Design_NC3D_458_Portland_EcoDistricts_Downtown_HiRes_0000_Base_Image_1920P.jpg",
+        "caption": "Portland City Model: NC3D",
+        "tags": [
+            "3D Animation",
+            "City Model",
+            "Urban Design",
+            "Planning"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "315_116_300_1_DiridonAerial_Design_Crop_01.jpg",
+        "caption": "San Jose Diridon Station: California High Speed Rail Authority",
+        "tags": [
+            "High Speed Rail",
+            "Transit",
+            "3D Animation",
+            "Photosimulation",
+            "Urban Design"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "362_shot_A.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "402_Lowry_Ave_E.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "404_07_DirectorsCut_01.png",
+        "caption": "Oakland Bay Bridge Load Transfer: TYLIN",
+        "tags": [
+            "Construction",
+            "Bridges",
+            "3D Animation"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "404_07_DirectorsCut_02.png",
+        "caption": "Oakland Bay Bridge Load Transfer: TYLIN",
+        "tags": [
+            "Construction",
+            "Bridges",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "404_Hinge_Pipe_4k_01_0000.jpg",
+        "caption": "Oakland Bay Bridge Siesmic Fuse: TYLIN",
+        "tags": [
+            "Bridges",
+            "Construction",
+            "3D"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "404_Pier_e2_Anchor_B_CLR_02.jpg",
+        "caption": "Oakland Bay Bridge Cable Anchors: TYLIN",
+        "tags": [
+            "Bridges",
+            "Construction",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "41.jpg",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "417_30_99E_NB_5343_03.jpg",
+        "caption": "Portland Light Rail Milaukie Extension: Tri-Met",
+        "tags": [
+            "Photosimulation",
+            "DEIS",
+            "Light Rail",
+            "Transit"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "428_Good_Sam_INT_Surgery_0224.jpg",
+        "caption": "Good Samaritan Hospital: Multicare",
+        "tags": [
+            "Institutional",
+            "Architecture",
+            "3D Animation",
+            "Interior"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "444-Credit-River-A01.png",
+        "caption": "Credit River Bridge: WSP",
+        "tags": [
+            "Bridges",
+            "Traffic",
+            "3D Animation",
+            "Highways"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "485_Cam_C_Night_PSD_1920P.jpg",
+        "caption": "Museum of the American Revolution: RAM Stern",
+        "tags": [
+            "Architecture",
+            "Institutional",
+            "3D Still"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "521_6thStreetBridge_Stage_5_04.jpg",
+        "caption": "6th Street Bridge Stage 5",
+        "tags": [
+            "Construction",
+            "Bridges",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "528_Kosciuszko_4D_01.png",
+        "caption": "Kosciuszko Bridge",
+        "tags": [
+            "Bridges",
+            "Construction",
+            "3D Animation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "528_Kosciuszko_4D_02.png",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    },
+    {
+        "url": "528_Kosciuzko_bridge_12.png",
+        "caption": "Kosciuszko Bridge Proposal",
+        "tags": [
+            "3D Animation",
+            "Bridges",
+            "Traffic",
+            "Highways"
+        ],
+        "display": "hide"
+    },
+    {
+        "url": "576_Cam_7623_15_1920P.jpg",
+        "caption": "Old Town Urban Design; SRM",
+        "tags": [
+            "Architecture",
+            "Urban Design",
+            "Photosimulation"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "585-Elon-Business-School_cam-A_Unfiltered_04-LessBlur_00000.jpg",
+        "caption": "Elon University Business School: RAM Stern",
+        "tags": [
+            "3D Still",
+            "Architecture",
+            "Institutional",
+            "Exterior"
+        ],
+        "display": "homepage"
+    },
+    {
+        "url": "MoodyPark_Still_FinalComposite_UNBorked.jpg",
+        "caption": "Moody Park Station: Aecom",
+        "tags": [
+            "Transit",
+            "Light Rail",
+            "3D"
+        ],
+        "display": "portfolio"
+    },
+    {
+        "url": "vlcsnap-2016-02-25-13h00m06s153.png",
+        "caption": "",
+        "tags": [],
+        "display": "hide"
+    }
+]
+--- END FILE: src\data\imageData.json ---
 
 --- START FILE: src\pages\BlogListPage.tsx ---
 import React from 'react';
@@ -4676,45 +6028,44 @@ export default HomePage;
 
 --- START FILE: src\utils\slideshowHelper.ts ---
 import { Slide } from '../types';
-import { imageData } from '../data/imageData';
+import rawData from '../data/imageData.json';
 
-const IMAGE_BASE_URL = 'https://www.nc3d.com/images/Discipline/';
+// Cast JSON
+const allSlides = rawData as Slide[];
 
-// Create the final, processed array of slides with full URLs
-export const slideshowImages: Slide[] = imageData.map((slide) => ({
-  ...slide,
-  url: `${IMAGE_BASE_URL}${slide.url}`,
-}));
+// 1. Prepare the list (Filter & Fix Paths) - BUT DO NOT SHUFFLE YET
+export const slideshowImages: Slide[] = allSlides
+  .filter((slide) => {
+    return slide.display === 'homepage' || slide.display === 'portfolio';
+  })
+  .map((slide) => ({
+    ...slide,
+    url: `/slides/${slide.url}`,
+  }));
 
-
-// Fisher-Yates (aka Knuth) Shuffle
+// 2. Export the Shuffle Function so the Component can use it
 export function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   let currentIndex = newArray.length;
   let randomIndex;
 
-  // While there remain elements to shuffle.
   while (currentIndex !== 0) {
-    // Pick a remaining element.
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
-
-    // And swap it with the current element.
     [newArray[currentIndex], newArray[randomIndex]] = [
-      newArray[randomIndex],
       newArray[currentIndex],
+      newArray[randomIndex],
     ];
   }
 
   return newArray;
 }
 
-export function preloadImages(slides: Slide[]): void {
-  slides.forEach((slide) => {
+export const preloadImages = (images: Slide[]) => {
+  images.forEach((slide) => {
     const img = new Image();
     img.src = slide.url;
   });
-}
-
+};
 --- END FILE: src\utils\slideshowHelper.ts ---
 

@@ -1,32 +1,42 @@
 import React, { useState, useMemo } from 'react';
 import Slideshow from '../components/Slideshow';
+import WordCloud from '../components/WordCloud'; 
 import CompanyStatement from '../components/CompanyStatement';
-import WordCloud from '../components/WordCloud';
 import { slideshowImages } from '../utils/slideshowHelper';
 
 const HomePage: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const filteredImages = useMemo(() => {
-    if (!selectedTag) return slideshowImages;
-    return slideshowImages.filter((img) => img.tags?.includes(selectedTag));
+  const filteredAndShuffledImages = useMemo(() => {
+    let result = selectedTag 
+      ? slideshowImages.filter(slide => slide.tags?.includes(selectedTag))
+      : [...slideshowImages];
+
+    // Old School Fisher-Yates Shuffle
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
   }, [selectedTag]);
 
   return (
-    <>
-      {/* 1. Slideshow (with internal caption overlay) */}
-      <Slideshow images={filteredImages} />
+    /* Changed bg-black to your specific gray bg-[#565656] */
+    <div className="bg-[#565656] min-h-screen w-full flex flex-col">
+      <Slideshow images={filteredAndShuffledImages} />
       
-      {/* 2. WordCloud (now with background style) */}
-      <WordCloud 
-        images={slideshowImages} 
-        selectedTag={selectedTag} 
-        onSelectTag={setSelectedTag} 
-      />
+      <div className="bg-[#565656] w-full overflow-hidden">
+        <WordCloud 
+          images={slideshowImages} 
+          selectedTag={selectedTag} 
+          onSelectTag={setSelectedTag} 
+        />
+      </div>
       
-      {/* 3. Company Statement */}
-      <CompanyStatement />
-    </>
+      <div className="bg-[#565656] w-full">
+        <CompanyStatement />
+      </div>
+    </div>
   );
 };
 

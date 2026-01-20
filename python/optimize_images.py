@@ -1,16 +1,13 @@
 import os
 import json
-from PIL import Image
+from PIL import Image, ImageOps
 
 # --- PATH CONFIGURATION ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) 
 
-# Inputs
 DATA_FILE = os.path.join(PROJECT_ROOT, 'src', 'data', 'imageData.json')
 SOURCE_DIR = os.path.join(PROJECT_ROOT, '_raw_images', 'portfolio')
-
-# Output
 DEST_DIR = os.path.join(PROJECT_ROOT, 'public', 'slides')
 
 # Settings
@@ -18,15 +15,16 @@ MAX_WIDTH = 1920
 MAX_HEIGHT = 1080
 QUALITY = 85
 TARGET_RATIO = 16 / 9
-TOLERANCE = 0.10  # 10% tolerance
+TOLERANCE = 0.10
+FORCE_UPDATE = True  # <--- SET THIS TO TRUE to overwrite existing files
 # ---------------------
 
 def optimize_images():
     print(f"🚀  Running Optimizer from: {SCRIPT_DIR}")
+    print(f"    Force Update Mode: {FORCE_UPDATE}")
     
     if not os.path.exists(DEST_DIR):
         os.makedirs(DEST_DIR)
-        print(f"✅  Created output folder: {DEST_DIR}")
 
     if not os.path.exists(DATA_FILE):
         print(f"❌  Error: Could not find {DATA_FILE}")
@@ -41,7 +39,6 @@ def optimize_images():
 
     processed_count = 0
     skipped_count = 0
-    cropped_count = 0
     
     print(f"🔍  Scanning {len(data)} records...")
 
@@ -59,71 +56,55 @@ def optimize_images():
             print(f"⚠️  Source missing: {filename}")
             continue
 
-        # Force regenerate if you want to test the new cropping logic immediately
-        # Remove "and os.path.exists(dest_path)" to force overwrite every time
-        if os.path.exists(dest_path):
+        # CACHE CHECK: Only skip if file exists AND we aren't forcing an update
+        if not FORCE_UPDATE and os.path.exists(dest_path):
             skipped_count += 1
             continue
 
         try:
             with Image.open(source_path) as img:
+                img = ImageOps.exif_transpose(img)
                 if img.mode in ("RGBA", "P"): 
                     img = img.convert("RGB")
                 
-                # --- START "NEAR FIT" CROP LOGIC ---
                 w, h = img.size
                 current_ratio = w / h
-                
-                # Calculate deviation from 16:9
-                # If ratio is 1.77, deviation is 0. 
-                # If ratio is 1.6 or 1.9, it might be within 10%
                 deviation = abs(current_ratio - TARGET_RATIO) / TARGET_RATIO
                 
-                if deviation <= TOLERANCE:
-                    # It is close enough! Let's crop to exact 16:9
-                    
+                # --- STRATEGY 1: IMMERSIVE CROP (Landscapes only) ---
+                if (w > h) and (deviation <= TOLERANCE):
                     if current_ratio > TARGET_RATIO:
-                        # Image is too WIDE (Panorama-ish). Crop sides.
-                        # Target Width = Height * 1.777
                         new_w = int(h * TARGET_RATIO)
                         offset = (w - new_w) // 2
-                        # Crop box: (left, top, right, bottom)
                         img = img.crop((offset, 0, offset + new_w, h))
-                        print(f"✂️  Cropping Width: {filename} (was {current_ratio:.2f})")
-                        
-                    elif current_ratio < TARGET_RATIO:
-                        # Image is too TALL (Square-ish). Crop top/bottom.
-                        # Target Height = Width / 1.777
+                    else:
                         new_h = int(w / TARGET_RATIO)
                         offset = (h - new_h) // 2
                         img = img.crop((0, offset, w, offset + new_h))
-                        print(f"✂️  Cropping Height: {filename} (was {current_ratio:.2f})")
                     
-                    cropped_count += 1
-                    
-                    # After cropping, we can force resize to exactly 1920x1080
                     img = img.resize((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
-                
+                    print(f"✂️  Landscape Crop: {filename}")
+
+                # --- STRATEGY 2: PILLARBOX (Portraits / Others) ---
                 else:
-                    # Not close enough (likely a vertical portrait). 
-                    # Just fit inside the box without cutting anything.
-                    print(f"   Fitting (No Crop): {filename} (Ratio {current_ratio:.2f})")
                     img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
-                # --- END CROP LOGIC ---
-                
+                    background = Image.new('RGB', (MAX_WIDTH, MAX_HEIGHT), (0, 0, 0))
+                    
+                    bg_w, bg_h = background.size
+                    img_w, img_h = img.size
+                    offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
+                    
+                    background.paste(img, offset)
+                    img = background
+                    print(f"🔳 Black Bars Added: {filename}")
+
                 img.save(dest_path, "JPEG", quality=QUALITY, optimize=True)
                 processed_count += 1
 
         except Exception as e:
             print(f"❌  Error processing {filename}: {e}")
 
-    print(f"\n---------------------------------------")
-    print(f"✅  Optimization Complete")
-    print(f"---------------------------------------")
-    print(f"   Generated: {processed_count}")
-    print(f"   (Cropped): {cropped_count} near-match images")
-    print(f"   Cached:    {skipped_count}")
-    print(f"   Output:    {DEST_DIR}")
+    print(f"\n✅  Done! Generated: {processed_count} | Cached: {skipped_count}")
 
 if __name__ == "__main__":
     optimize_images()

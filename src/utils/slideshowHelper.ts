@@ -1,40 +1,40 @@
 import { Slide } from '../types';
-import { imageData } from '../data/imageData';
+import rawData from '../data/imageData.json';
 
-const IMAGE_BASE_URL = 'https://www.nc3d.com/images/Discipline/';
+// Cast JSON
+const allSlides = rawData as Slide[];
 
-// Create the final, processed array of slides with full URLs
-export const slideshowImages: Slide[] = imageData.map((slide) => ({
-  ...slide,
-  url: `${IMAGE_BASE_URL}${slide.url}`,
-}));
+// 1. Prepare the list (Filter & Fix Paths) - BUT DO NOT SHUFFLE YET
+export const slideshowImages: Slide[] = allSlides
+  .filter((slide) => {
+    return slide.display === 'homepage' || slide.display === 'portfolio';
+  })
+  .map((slide) => ({
+    ...slide,
+    url: `/slides/${slide.url}`,
+  }));
 
-
-// Fisher-Yates (aka Knuth) Shuffle
+// 2. Export the Shuffle Function so the Component can use it
 export function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   let currentIndex = newArray.length;
   let randomIndex;
 
-  // While there remain elements to shuffle.
   while (currentIndex !== 0) {
-    // Pick a remaining element.
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
-
-    // And swap it with the current element.
     [newArray[currentIndex], newArray[randomIndex]] = [
-      newArray[randomIndex],
       newArray[currentIndex],
+      newArray[randomIndex],
     ];
   }
 
   return newArray;
 }
 
-export function preloadImages(slides: Slide[]): void {
-  slides.forEach((slide) => {
+export const preloadImages = (images: Slide[]) => {
+  images.forEach((slide) => {
     const img = new Image();
     img.src = slide.url;
   });
-}
+};
