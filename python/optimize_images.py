@@ -88,7 +88,7 @@ def optimize_images():
                 # --- STRATEGY 2: PILLARBOX (Portraits / Others) ---
                 else:
                     img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
-                    background = Image.new('RGB', (MAX_WIDTH, MAX_HEIGHT), (0, 0, 0))
+                    background = Image.new('RGB', (MAX_WIDTH, MAX_HEIGHT), (96, 96, 96))
                     
                     bg_w, bg_h = background.size
                     img_w, img_h = img.size
