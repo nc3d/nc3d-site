@@ -5,7 +5,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import BlogListPage from './pages/BlogListPage';
 import BlogPostPage from './pages/BlogPostPage';
-import ContactPage from './pages/ContactPage'; //
+import ContactPage from './pages/ContactPage';
 
 const App: React.FC = () => {
   return (
@@ -14,7 +14,13 @@ const App: React.FC = () => {
         <Header />
         <main className="mt-4">
           <Routes>
+            {/* 1. Standard Home Route */}
             <Route path="/" element={<HomePage />} />
+            
+            {/* 2. New Dynamic Tag Route 
+                This allows nc3d.com/bridges to work */}
+            <Route path="/:tag" element={<HomePage />} />
+
             <Route path="/blog" element={<BlogListPage />} />
             <Route path="/blog/:postId" element={<BlogPostPage />} />
             <Route path="/contact" element={<ContactPage />} />

@@ -150,7 +150,7 @@
     },
     {
         "url": "Bridges_315_031_Bakersfield_B_01_0000_1920P.jpg",
-        "caption": "CHigh Speed Rail Kern River Bridge Concept: California High Speed Rail Authority",
+        "caption": "Califiornia High Speed Rail Kern River Bridge Concept: California High Speed Rail Authority",
         "tags": [
             "High Speed Rail",
             "3D Animation",
@@ -160,7 +160,7 @@
     },
     {
         "url": "Bridges_315_116_05_02_2_E_Bridge_Boomerang_05_1920P.jpg",
-        "caption": "CHigh Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
+        "caption": "Califiornia High Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
         "tags": [
             "High Speed Rail",
             "3D Animation",
@@ -170,7 +170,7 @@
     },
     {
         "url": "Bridges_315_116_05_02_3_E_Bridge_TransverseArch_Night_HiRez_05_1920P.jpg",
-        "caption": "CHigh Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
+        "caption": "Califiornia High Speed Rail San Jose Bridge Study: California High Speed Rail Authority",
         "tags": [
             "High Speed Rail",
             "3D Animation",
@@ -348,7 +348,7 @@
             "3D",
             "Interior"
         ],
-        "display": "portfolio"
+        "display": "hide"
     },
     {
         "url": "Transit_255_01a_05_1920P.jpg",
@@ -465,12 +465,12 @@
     },
     {
         "url": "Transit_417_23_Monroe_St_5703_10_1920P.jpg",
-        "caption": "Portland/Milwalkie LRT FEIS: David Evans & Associates",
+        "caption": "Portland/Milwaukie LRT FEIS: David Evans & Associates",
         "tags": [
             "Light Rail",
             "Transit",
             "Photosimulation",
-            "DEIS"
+            "Visual Impacts"
         ],
         "display": "portfolio"
     },
@@ -497,7 +497,7 @@
     },
     {
         "url": "Urban-Design_315_0017_CamPlaza_0767_1920P.jpg",
-        "caption": "CHigh Speed Rail San Fransciso Transbay Station: California High Speed Rail Authority",
+        "caption": "California High Speed Rail Project, Tehatchapi Pass: California High Speed Rail Authority",
         "tags": [
             "High Speed Rail",
             "3D Animation",
@@ -519,7 +519,7 @@
     },
     {
         "url": "Urban-Design_315_018_Sacramento_A_01_4800x2700_1920P.jpg",
-        "caption": "CHigh Speed Rail, Sacramento Station Area Development: California High Speed Rail Authority",
+        "caption": "Califiornia High Speed Rail, Sacramento Station Area Development: California High Speed Rail Authority",
         "tags": [
             "High Speed Rail",
             "3D Animation",
@@ -647,7 +647,7 @@
             "Transit",
             "3D Animation"
         ],
-        "display": "homepage"
+        "display": "hide"
     },
     {
         "url": "Urban-Design_466_Cam_EB_0052_4K_01_1920P.jpg",
@@ -753,10 +753,10 @@
     },
     {
         "url": "417_30_99E_NB_5343_03.jpg",
-        "caption": "Portland Light Rail Milaukie Extension: Tri-Met",
+        "caption": "Portland/Milwaukie LRT FEIS: David Evans & Associates",
         "tags": [
             "Photosimulation",
-            "DEIS",
+            "Visual Impacts",
             "Light Rail",
             "Transit"
         ],
@@ -796,7 +796,7 @@
     },
     {
         "url": "521_6thStreetBridge_Stage_5_04.jpg",
-        "caption": "6th Street Bridge Stage 5",
+        "caption": "6th Street Bridge Stage 5: Skanska Civil USA",
         "tags": [
             "Construction",
             "Bridges",

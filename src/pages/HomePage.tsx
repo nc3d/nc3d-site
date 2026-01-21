@@ -1,41 +1,55 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Slideshow from '../components/Slideshow';
 import WordCloud from '../components/WordCloud'; 
 import CompanyStatement from '../components/CompanyStatement';
+import Footer from '../components/Footer'; // Ensure Footer is imported
 import { slideshowImages } from '../utils/slideshowHelper';
 
 const HomePage: React.FC = () => {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const { tag } = useParams<{ tag: string }>(); 
+  const navigate = useNavigate();
 
   const filteredAndShuffledImages = useMemo(() => {
-    let result = selectedTag 
-      ? slideshowImages.filter(slide => slide.tags?.includes(selectedTag))
+    // 1. Case-insensitive Filtering
+    let result = tag 
+      ? slideshowImages.filter(slide => 
+          slide.tags?.some(t => t.toLowerCase() === tag.toLowerCase())
+        )
       : [...slideshowImages];
 
-    // Old School Fisher-Yates Shuffle
-    for (let i = result.length - 1; i > 0; i--) {
+    // 2. "Old School" Fisher-Yates Shuffle
+    const shuffled = [...result];
+    for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return result;
-  }, [selectedTag]);
+    return shuffled;
+  }, [tag]);
+
+  const handleSelectTag = (newTag: string | null) => {
+    if (newTag) {
+      // Navigate to lowercase URL to keep nc3d.com/bridges clean
+      navigate(`/${newTag.toLowerCase()}`);
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
-    /* Changed bg-black to your specific gray bg-[#565656] */
     <div className="bg-[#565656] min-h-screen w-full flex flex-col">
       <Slideshow images={filteredAndShuffledImages} />
       
       <div className="bg-[#565656] w-full overflow-hidden">
         <WordCloud 
           images={slideshowImages} 
-          selectedTag={selectedTag} 
-          onSelectTag={setSelectedTag} 
+          selectedTag={tag || null} 
+          onSelectTag={handleSelectTag} 
         />
       </div>
       
-      <div className="bg-[#565656] w-full">
-        <CompanyStatement />
-      </div>
+      <CompanyStatement />
+
     </div>
   );
 };
