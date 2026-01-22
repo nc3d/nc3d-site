@@ -68,10 +68,23 @@ def optimize_images():
                     img = img.convert("RGB")
                 
                 w, h = img.size
+
+                # --- STEP 1: CONDITIONAL UPSCALING ---
+                # Only upscale if:
+                # 1. It is Landscape (Width > Height)
+                # 2. It is smaller than 1920px wide
+                if (w > h) and (w < MAX_WIDTH):
+                    ratio = MAX_WIDTH / w
+                    new_h = int(h * ratio)
+                    img = img.resize((MAX_WIDTH, new_h), Image.Resampling.LANCZOS)
+                    w, h = img.size # Update dimensions for subsequent logic
+                    print(f"🔼 Upscaled Landscape: {filename} to {w}x{h}")
+                # -------------------------------------
+
                 current_ratio = w / h
                 deviation = abs(current_ratio - TARGET_RATIO) / TARGET_RATIO
                 
-                # --- STRATEGY 1: IMMERSIVE CROP (Landscapes only) ---
+                # --- STRATEGY 2: IMMERSIVE CROP (Landscapes only) ---
                 if (w > h) and (deviation <= TOLERANCE):
                     if current_ratio > TARGET_RATIO:
                         new_w = int(h * TARGET_RATIO)
@@ -85,7 +98,7 @@ def optimize_images():
                     img = img.resize((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
                     print(f"✂️  Landscape Crop: {filename}")
 
-                # --- STRATEGY 2: PILLARBOX (Portraits / Others) ---
+                # --- STRATEGY 3: PILLARBOX (Portraits / Others) ---
                 else:
                     img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
                     background = Image.new('RGB', (MAX_WIDTH, MAX_HEIGHT), (96, 96, 96))

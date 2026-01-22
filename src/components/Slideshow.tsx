@@ -3,9 +3,10 @@ import { Slide } from '../types';
 
 interface SlideshowProps {
   images: Slide[];
+  onSlideChange?: (tags: string[]) => void;
 }
 
-const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
+const Slideshow: React.FC<SlideshowProps> = ({ images, onSlideChange }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prevIndex, setPrevIndex] = useState(0); 
   const [isPlaying, setIsPlaying] = useState(true);
@@ -15,6 +16,13 @@ const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
     setCurrentIndex(0);
     setPrevIndex(0);
   }, [images]);
+
+  // Notify parent of tags for the current slide
+  useEffect(() => {
+    if (images.length > 0 && onSlideChange) {
+      onSlideChange(images[currentIndex % images.length]?.tags || []);
+    }
+  }, [currentIndex, images, onSlideChange]);
 
   // Auto-play Logic (4 Second Interval)
   useEffect(() => {
@@ -29,7 +37,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
   }, [isPlaying, currentIndex, images]);
 
   const nextSlide = () => {
-    setPrevIndex(currentIndex); // Hold the old image in the background
+    setPrevIndex(currentIndex);
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
 
@@ -38,51 +46,54 @@ const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  if (!images || images.length === 0) return null;
+  if (!images || images.length === 0) {
+    return (
+      <div className="w-full max-w-screen-xl aspect-video bg-[#606060] rounded-lg flex items-center justify-center text-gray-400">
+        No images found for this category.
+      </div>
+    );
+  }
 
-  const currentSlide = images[currentIndex];
-  const previousSlide = images[prevIndex];
+  const safeCurrentIndex = currentIndex % images.length;
+  const safePrevIndex = prevIndex % images.length;
+
+  const currentSlide = images[safeCurrentIndex];
+  const previousSlide = images[safePrevIndex];
   
-  // Logic: Replaces ": " with "  |  "
-  const formattedCaption = currentSlide.caption?.replaceAll(': ', '  |  ');
+  const formattedCaption = currentSlide?.caption 
+    ? currentSlide.caption.replaceAll(': ', '  |  ') 
+    : currentSlide?.title || "";
 
   return (
     <div className="w-full bg-[#565656] flex flex-col items-center">
-      
-      {/* 1. The 16:9 Image Window */}
       <div className="relative w-full max-w-screen-xl aspect-video overflow-hidden group bg-black rounded-lg shadow-lg">
         
-        {/* BACKGROUND LAYER: The previous image stays here static */}
+        {/* Previous Image (Background) */}
         <div className="absolute inset-0 w-full h-full">
           <img 
-            src={previousSlide.url} 
+            src={previousSlide?.url} 
             alt="" 
             className="w-full h-full object-cover" 
           />
         </div>
 
-        {/* TOP LAYER: The new image fades in on top of the old one */}
-        <div key={currentSlide.url} className="absolute inset-0 w-full h-full animate-fade-in">
+        {/* Current Image (Fade-in Overlay) */}
+        <div key={currentSlide?.url} className="absolute inset-0 w-full h-full animate-fade-in">
           <img 
-            src={currentSlide.url} 
-            alt={currentSlide.caption} 
+            src={currentSlide?.url} 
+            alt={currentSlide?.caption || ""} 
             className="w-full h-full object-cover" 
           />
         </div>
 
-        {/* Play/Pause Button - Using ">" and "II" */}
+        {/* Play/Pause Button */}
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
           className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/40 hover:bg-black/60 text-white w-12 h-12 rounded-full z-30 transition-opacity opacity-0 group-hover:opacity-100 flex items-center justify-center backdrop-blur-sm font-bold"
         >
-          {isPlaying ? (
-            <span className="text-sm tracking-tighter">II</span>
-          ) : (
-            <span className="text-xl ml-1">{">"}</span>
-          )}
+          {isPlaying ? <span className="text-sm tracking-tighter">II</span> : <span className="text-xl ml-1">{">"}</span>}
         </button>
 
-        {/* Navigation Arrows */}
         {images.length > 1 && (
           <>
             <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/50 p-4 rounded-full text-white z-20 transition-opacity opacity-0 group-hover:opacity-100">
@@ -95,12 +106,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ images }) => {
         )}
       </div>
 
-      {/* 2. Captions */}
       <div className="w-full max-w-screen-xl px-4 md:px-0">
         <div className="px-6 py-4 bg-[#606060] text-gray-300 text-base mt-4 text-left rounded-lg shadow-lg min-h-[50px]">
-          <p className="leading-relaxed">
-            {formattedCaption}
-          </p>
+          <p className="leading-relaxed">{formattedCaption}</p>
         </div>
       </div>
     </div>
