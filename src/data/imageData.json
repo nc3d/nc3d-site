@@ -769,7 +769,8 @@
             "Institutional",
             "Architecture",
             "3D Animation",
-            "Interior"
+            "Interior",
+            "Medical"
         ],
         "display": "portfolio"
     },
@@ -940,7 +941,7 @@
         "caption": "NBSL Final Design: TYLIN International",
         "tags": [
             "Bridges",
-            "3D Still"
+            "Photosimulation"
         ],
         "display": "portfolio"
     },
@@ -1075,7 +1076,7 @@
             "Architecture",
             "Photosimulation"
         ],
-        "display": "portfolio"
+        "display": "hide"
     },
     {
         "url": "720-01_Faculty.jpg",
@@ -1147,7 +1148,7 @@
             "3D Animation",
             "Urban Design"
         ],
-        "display": "portfolio"
+        "display": "hide"
     },
     {
         "url": "LASI_8thSt_2020-12-01.jpg",
